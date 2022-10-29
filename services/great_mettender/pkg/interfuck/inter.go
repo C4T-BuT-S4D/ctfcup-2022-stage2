@@ -94,6 +94,9 @@ func Compile(program string, opsLimit int) (*Program, error) {
 			i++
 		}
 	}
+	if len(brStack) > 0 {
+		return nil, fmt.Errorf("%d mismatched opening brackets", len(brStack))
+	}
 
 	// Compile.
 	i = 0
