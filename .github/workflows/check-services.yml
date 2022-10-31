@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         service:
-        - example
+        - flexinpoint
 
     steps:
     - uses: actions/checkout@v2

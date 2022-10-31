@@ -1,0 +1,55 @@
+namespace flexinpoint;
+
+table RegisterRequest {
+  username: string (required);
+}
+
+table RegisterResponse {
+  key: string (required);
+}
+
+table MeRequest {
+  key: string (required);
+}
+
+table MeResponse {
+  username: string (required);
+}
+
+table AddStationRequest {
+  key: string (required);
+  attributes: [ubyte] (required, flexbuffer);
+}
+
+table AddStationResponse {
+}
+
+table AddRoadRequest {
+  key: string (required);
+  start: string (required);
+  finish: string (required);
+  length: uint32;
+}
+
+table AddRoadResponse {
+}
+
+table FindPathRequest {
+  key: string (required);
+  attributes: [ubyte] (required, flexbuffer);
+  start: string (required);
+  finish: string (required);
+}
+
+table FindPathResponse {
+  path: string (required);
+  length: uint64;
+}
+
+rpc_service FlexinPoint {
+  Register (RegisterRequest): RegisterResponse;
+  Me (MeRequest): MeResponse;
+  AddStation (AddStationRequest): AddStationResponse;
+  AddRoad (AddRoadRequest): AddRoadResponse;
+  FindPath (FindPathRequest): FindPathResponse;
+}
