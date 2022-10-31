@@ -5,7 +5,7 @@
 constexpr size_t kServicePort = 50051;
 
 int main() {
-  flexinpoint::FlexinPointService service(std::getenv("PG_DSN"));
+  flexinpoint::FlexinPointService service;
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(fmt::format("0.0.0.0:{}", kServicePort),

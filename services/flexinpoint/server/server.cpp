@@ -16,11 +16,12 @@ constexpr size_t kMaxStationsForPath = 10;
 constexpr std::string_view kKeyAlphabet{"0123456789abcdef"};
 constexpr std::string_view kName{"_name"};
 constexpr std::string_view kDescription{"_description"};
+
+thread_local pqxx::connection connection{std::getenv("PG_DSN")};
 } // namespace
 
-FlexinPointService::FlexinPointService(std::string connection_string)
-    : connection_(std::move(connection_string)) {
-  pqxx::work w(connection_);
+FlexinPointService::FlexinPointService() {
+  pqxx::work w(connection);
 
   w.exec(
       fmt::format("CREATE TABLE IF NOT EXISTS users (username VARCHAR({}), key "
@@ -50,7 +51,7 @@ grpc::Status FlexinPointService::Register(
   auto request = request_msg->GetRoot();
   auto username = request->username()->string_view();
 
-  pqxx::work w(connection_);
+  pqxx::work w(connection);
 
   auto r = w.query01<std::string>(fmt::format(
       "SELECT username FROM users WHERE username = {}", w.quote(username)));
@@ -82,7 +83,7 @@ grpc::Status FlexinPointService::Register(
 
 std::optional<std::string>
 FlexinPointService::get_username(std::string_view key) {
-  pqxx::work w(connection_);
+  pqxx::work w(connection);
 
   auto r = w.query01<std::string>(
       fmt::format("SELECT username FROM users WHERE key = {}", w.quote(key)));
@@ -163,7 +164,7 @@ grpc::Status FlexinPointService::AddStation(
     return {grpc::StatusCode::INVALID_ARGUMENT, "empty description"};
   }
 
-  pqxx::work w(connection_);
+  pqxx::work w(connection);
 
   auto r = w.query01<uint32_t>(
       fmt::format("SELECT id FROM (SELECT id, value FROM stations s, "
@@ -200,7 +201,7 @@ grpc::Status FlexinPointService::AddRoad(
     return {grpc::StatusCode::UNAUTHENTICATED, "user is not authorized"};
   }
 
-  pqxx::work w(connection_);
+  pqxx::work w(connection);
 
   auto r = w.query01<uint32_t>(
       fmt::format("SELECT id FROM (SELECT id, value FROM stations s, "
@@ -265,7 +266,7 @@ grpc::Status FlexinPointService::FindPath(
             "start and finish stations are the same"};
   }
 
-  pqxx::work w(connection_);
+  pqxx::work w(connection);
 
   auto r = w.query01<uint32_t>(
       fmt::format("SELECT id FROM (SELECT id, value FROM stations s, "

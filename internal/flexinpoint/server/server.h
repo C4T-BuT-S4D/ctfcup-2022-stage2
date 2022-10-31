@@ -12,7 +12,7 @@ namespace flexinpoint {
 
 class FlexinPointService final : public FlexinPoint::Service {
 public:
-  FlexinPointService(std::string connection_string);
+  FlexinPointService();
 
   grpc::Status
   Register(grpc::ServerContext *context,
@@ -40,8 +40,6 @@ public:
 
 private:
   std::optional<std::string> get_username(std::string_view key);
-
-  pqxx::connection connection_;
   std::random_device random_;
 };
 
