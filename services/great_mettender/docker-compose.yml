@@ -12,6 +12,8 @@ services:
     environment:
       GOMAXPROCS: '2'
       PG_DSN: 'host=db user=great_mettender password=great_mettender dbname=great_mettender port=5432 sslmode=disable'
+    depends_on:
+      - db
 
   #    sysctls:
   #      - net.core.rmem_max=2500000

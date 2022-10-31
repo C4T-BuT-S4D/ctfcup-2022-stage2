@@ -291,7 +291,10 @@ class StructureValidator(BaseValidator):
 
     def validate_file(self, f: Path):
         path = f.relative_to(BASE_DIR)
-        self._error(f.suffix != '.yaml', f'file {path} has .yaml extension')
+
+        if 'docker-compose' in f.name:
+            self._error(f.suffix != '.yaml', f'file {path} has .yaml extension')
+
         self._error(f.name != '.gitkeep', f'{path} found, should be named .keep')
 
         if f.name == 'docker-compose.yml':
