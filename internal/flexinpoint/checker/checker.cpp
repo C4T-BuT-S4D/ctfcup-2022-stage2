@@ -228,11 +228,22 @@ void CheckMachine::get(std::string_view flag_id, std::string_view flag,
 }
 
 std::function<void()> action(int argc, const char *argv[]) {
-  if (argc < 3) {
+  if (argc < 2) {
     check_failed("", "too few arguments");
   }
 
   std::string_view method{argv[1]};
+
+  if (method == "info") {
+    return []() {
+      std::cout << R"({"vulns":1,"timeout":10,"attack_data":true})"
+                << std::endl;
+    };
+  }
+
+  if (argc < 3) {
+    check_failed("", "too few arguments");
+  }
   auto checker = std::make_shared<CheckMachine>(
       FlexinPointClient{fmt::format("{}:{}", argv[2], kServicePort)});
 
