@@ -235,10 +235,7 @@ std::function<void()> action(int argc, const char *argv[]) {
   std::string_view method{argv[1]};
 
   if (method == "info") {
-    return []() {
-      std::cout << R"({"vulns":1,"timeout":10,"attack_data":true})"
-                << std::endl;
-    };
+    return []() { up(R"({"vulns":1,"timeout":10,"attack_data":true})", ""); };
   }
 
   if (argc < 3) {
