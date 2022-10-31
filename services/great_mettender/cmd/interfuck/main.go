@@ -80,7 +80,7 @@ func run() (*executionResult, error) {
 	return res, nil
 }
 
-// decode if here for you to enjoy reading the traffic.
+// decode is here for you to enjoy reading the traffic.
 func decode(s string) ([]byte, error) {
 	step1, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
