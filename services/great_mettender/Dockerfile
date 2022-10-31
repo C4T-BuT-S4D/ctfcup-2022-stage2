@@ -3,7 +3,7 @@ FROM golang:1.18.3-alpine
 ENV INTERFUCK_PATH /interfuck
 
 WORKDIR /app
-COPY go.* .
+COPY go.* ./
 RUN go mod download
 
 COPY cmd cmd
