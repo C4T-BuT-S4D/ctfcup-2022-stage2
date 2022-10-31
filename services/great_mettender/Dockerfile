@@ -2,6 +2,9 @@ FROM golang:1.18.3-alpine
 
 ENV INTERFUCK_PATH /interfuck
 
+# Disables useless warning, not a part of the service.
+ENV QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING = true
+
 WORKDIR /app
 COPY go.* ./
 RUN go mod download
