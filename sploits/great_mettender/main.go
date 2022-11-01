@@ -105,13 +105,13 @@ func main() {
 	}
 
 	fmt.Println("Executing bid...")
-	execute, err := bidsClient.Execute(ctx, &tenderspb.Bid_ExecuteRequest{Id: createBid.Bid.Id})
-	if err != nil {
-		panic(err)
+	_, err = bidsClient.Execute(ctx, &tenderspb.Bid_ExecuteRequest{Id: createBid.Bid.Id})
+	if err == nil {
+		panic("execution not errored")
 	}
-	fmt.Printf("Execution result: %v\n", execute)
+	fmt.Printf("Execution error: %v\n", err)
 
-	inputRaw := regexp.MustCompile(`input ([^:]+):`).FindStringSubmatch(execute.Error)[1]
+	inputRaw := regexp.MustCompile(` ([^ ]+)}, bid &\{`).FindStringSubmatch(err.Error())[1]
 	println(inputRaw)
 	input, err := decode(inputRaw)
 	if err != nil {

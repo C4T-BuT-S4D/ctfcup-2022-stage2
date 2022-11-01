@@ -102,7 +102,7 @@ func (s *Service) Execute(ctx context.Context, request *tenderspb.Bid_ExecuteReq
 
 	res, err := s.executor.Execute(ctx, bid.Program, tender.ProgramInput)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "execution: %v", err)
+		return nil, status.Errorf(codes.Internal, "executing tender %v, bid %v: %v", tender, bid, err)
 	}
 
 	// NDA.

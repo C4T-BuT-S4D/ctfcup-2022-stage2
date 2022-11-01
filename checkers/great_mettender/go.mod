@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/klauspost/compress v1.15.12
-	github.com/pomo-mondreganto/go-checklib v0.0.3
+	github.com/pomo-mondreganto/go-checklib v0.0.4
 	gmtservice v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.50.1
 )

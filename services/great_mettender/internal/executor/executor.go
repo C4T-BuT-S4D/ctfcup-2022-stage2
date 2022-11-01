@@ -49,59 +49,45 @@ func (e *Executor) Execute(ctx context.Context, program, input string) (*models.
 	defer cancel()
 	cmd := exec.CommandContext(rctx, e.path, programFile.Name(), inputFile.Name())
 	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		if errors.Is(err, context.Canceled) {
-			// Timeout.
-			return &models.ExecutionResult{
-				Elapsed: time.Since(start),
-				Error:   "command canceled early",
-			}, nil
+
+	err = cmd.Run()
+
+	var exitErr *exec.ExitError
+	switch {
+	case err == nil:
+		var res models.ExecutionResult
+		if err := json.Unmarshal(stdout.Bytes(), &res); err != nil {
+			return nil, fmt.Errorf("parsing interpreter result: %w", err)
 		}
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			if exitErr.ExitCode() == 1 {
-				var res models.ExecutionResult
-				if err := json.Unmarshal(stdout.Bytes(), &res); err != nil {
-					return &models.ExecutionResult{
-						Elapsed: time.Since(start),
-						Error:   fmt.Sprintf("unable to parse command output: %s", stdout.String()),
-					}, nil
-				}
-				return &res, nil
-			} else {
-				// Unexpected return code, should never happen.
-				// Panic?
+		return &res, nil
+
+	case errors.Is(err, context.Canceled):
+		// Timeout.
+		return &models.ExecutionResult{
+			Elapsed: time.Since(start),
+			Error:   "command canceled early",
+		}, nil
+
+	case errors.As(err, &exitErr):
+		switch code := exitErr.ExitCode(); code {
+		case 1:
+			// os.Exit(1) in interpreter.
+			var res models.ExecutionResult
+			if err := json.Unmarshal(stdout.Bytes(), &res); err != nil {
 				return &models.ExecutionResult{
 					Elapsed: time.Since(start),
-					Error: fmt.Sprintf(
-						"[unexpected1] running program %s input %s: %s; %s",
-						program,
-						input,
-						exitErr.String(),
-						string(exitErr.Stderr),
-					),
+					Error:   fmt.Sprintf("unable to parse command output: %s", stdout.String()),
 				}, nil
 			}
+			return &res, nil
+
+		default:
+			return nil, fmt.Errorf("unexpected process error (code %d): %w", code, err)
 		}
-		// Even more unexpected error.
-		return &models.ExecutionResult{
-			Elapsed: time.Since(start),
-			Error: fmt.Sprintf(
-				"[unexpected2] running program %s input %s: %v",
-				program,
-				input,
-				err,
-			),
-		}, nil
+
+	default:
+		return nil, fmt.Errorf("unexpected cmd error: %w", err)
 	}
-	var res models.ExecutionResult
-	if err := json.Unmarshal(stdout.Bytes(), &res); err != nil {
-		return &models.ExecutionResult{
-			Elapsed: time.Since(start),
-			Error:   fmt.Sprintf("unable to parse command output: %s", stdout.String()),
-		}, nil
-	}
-	return &res, nil
 }
 
 func cleanupTemp(f *os.File) {
