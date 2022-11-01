@@ -1,4 +1,4 @@
-package lib
+package client
 
 type FlagData struct {
 	Author    string            `json:"author,omitempty"`

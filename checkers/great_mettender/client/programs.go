@@ -1,4 +1,4 @@
-package lib
+package client
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
+	"github.com/pomo-mondreganto/go-checklib/gen"
 )
 
 //go:embed programs/bottles1.txt
@@ -110,15 +111,15 @@ func mutateProgram(s string) string {
 	b := strings.Builder{}
 	for len(left) > 0 {
 		// Inject random NOPs.
-		if b.Len()+len(left) < 50000 && RandInt(0, 50) == 0 {
+		if b.Len()+len(left) < 50000 && gen.RandInt(0, 50) == 0 {
 			b.WriteRune('>')
 			left = append(left, '<')
 		}
-		if b.Len()+len(left) < 50000 && RandInt(0, 50) == 0 {
+		if b.Len()+len(left) < 50000 && gen.RandInt(0, 50) == 0 {
 			b.WriteRune('+')
 			left = append(left, '-')
 		}
-		if b.Len()+len(left) < 50000 && RandInt(0, 50) == 0 {
+		if b.Len()+len(left) < 50000 && gen.RandInt(0, 50) == 0 {
 			b.WriteRune('-')
 			left = append(left, '+')
 		}
@@ -130,13 +131,13 @@ func mutateProgram(s string) string {
 }
 
 func SampleProgram() string {
-	program := Sample(allPrograms)
+	program := gen.Sample(allPrograms)
 	program = hello2
 	return EncodeFormat(mutateProgram(program))
 }
 
 func SampleProgramWithOutput(input string) (string, string) {
-	program := Sample(knownOutputPrograms)
+	program := gen.Sample(knownOutputPrograms)
 	var out string
 	switch program {
 	case hello1, hello2:
@@ -150,6 +151,6 @@ func SampleProgramWithOutput(input string) (string, string) {
 }
 
 func SampleCatProgram() string {
-	program := Sample(catPrograms)
+	program := gen.Sample(catPrograms)
 	return EncodeFormat(mutateProgram(program))
 }

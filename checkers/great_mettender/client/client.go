@@ -1,20 +1,19 @@
-package lib
+package client
 
 import (
 	"crypto/tls"
 	"fmt"
-	"time"
 
 	qnet "gmtservice/pkg/quicrpc"
 
+	"github.com/pomo-mondreganto/go-checklib"
+	"github.com/pomo-mondreganto/go-checklib/require"
 	"google.golang.org/grpc"
 )
 
 const servicePort = 9090
 
-const ActionTimeout = time.Second * 10
-
-func Connect(host string) (*grpc.ClientConn, error) {
+func Connect(c *checklib.C, host string) *grpc.ClientConn {
 	tlsConf := &tls.Config{
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"great_mettender"},
@@ -29,8 +28,6 @@ func Connect(host string) (*grpc.ClientConn, error) {
 	}
 
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host, servicePort), grpcOpts...)
-	if err != nil {
-		return nil, Down("connect error", "connecting to host %s: %v", host, err)
-	}
-	return conn, nil
+	require.NoError(c, err, "connection error")
+	return conn
 }

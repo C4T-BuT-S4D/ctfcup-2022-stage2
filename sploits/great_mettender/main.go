@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,14 +14,17 @@ import (
 	"regexp"
 	"time"
 
-	"gmtchecker/lib"
 	pingerpb "gmtservice/pkg/proto/pinger"
 	tenderspb "gmtservice/pkg/proto/tenders"
+	qnet "gmtservice/pkg/quicrpc"
 
 	"github.com/google/uuid"
 	"github.com/klauspost/compress/zstd"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
+
+const servicePort = 9090
 
 func main() {
 	if len(os.Args) < 3 {
@@ -28,11 +32,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := lib.Connect(os.Args[1])
+	host := os.Args[1]
+	tenderID := os.Args[2]
+
+	tlsConf := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"great_mettender"},
+	}
+
+	creds := qnet.NewCredentials(tlsConf)
+
+	dialer := qnet.NewQuicDialer(tlsConf)
+	grpcOpts := []grpc.DialOption{
+		grpc.WithContextDialer(dialer),
+		grpc.WithTransportCredentials(creds),
+	}
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host, servicePort), grpcOpts...)
 	if err != nil {
 		panic(err)
 	}
-	tenderID := os.Args[2]
 
 	pingClient := pingerpb.NewPingerServiceClient(conn)
 	bidsClient := tenderspb.NewBidServiceClient(conn)
