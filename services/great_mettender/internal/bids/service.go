@@ -11,6 +11,7 @@ import (
 	tenderspb "great_mettender/pkg/proto/tenders"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -41,6 +42,8 @@ type Service struct {
 }
 
 func (s *Service) Create(ctx context.Context, request *tenderspb.Bid_CreateRequest) (*tenderspb.Bid_CreateResponse, error) {
+	logrus.Debug("Bids/Create")
+
 	if request.Bid == nil {
 		return nil, status.Error(codes.InvalidArgument, "bid required")
 	}
@@ -78,6 +81,8 @@ func (s *Service) Create(ctx context.Context, request *tenderspb.Bid_CreateReque
 }
 
 func (s *Service) Execute(ctx context.Context, request *tenderspb.Bid_ExecuteRequest) (*tenderspb.Bid_ExecuteResponse, error) {
+	logrus.Debugf("Bids/Execute %v", request)
+
 	bid, err := s.bidsController.Get(ctx, request.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "fetching bid: %v", err)

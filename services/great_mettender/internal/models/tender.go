@@ -9,12 +9,12 @@ import (
 )
 
 type Tender struct {
-	ID                 string `gorm:"primaryKey;type:uuid"`
-	Author             string `gorm:"type:varchar(64)"`
-	CreatedAt          time.Time
-	Winner             string `gorm:"type:varchar(64)"`
-	Name               string `gorm:"type:varchar(64);index"`
-	Description        string `gorm:"type:text"`
+	ID                 string    `gorm:"primaryKey;type:uuid"`
+	Author             string    `gorm:"type:varchar(64)"`
+	CreatedAt          time.Time `gorm:"index"`
+	Winner             string    `gorm:"type:varchar(64)"`
+	Name               string    `gorm:"type:varchar(64)"`
+	Description        string    `gorm:"type:text"`
 	Private            bool
 	Finished           bool
 	RequiredReputation float32

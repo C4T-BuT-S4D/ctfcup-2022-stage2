@@ -10,6 +10,7 @@ import (
 	tenderspb "great_mettender/pkg/proto/tenders"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -37,6 +38,8 @@ type Service struct {
 }
 
 func (s *Service) Create(ctx context.Context, request *tenderspb.Tender_CreateRequest) (*tenderspb.Tender_CreateResponse, error) {
+	logrus.Debug("Tenders/Create")
+
 	if request.Tender == nil {
 		return nil, status.Error(codes.InvalidArgument, "tender required")
 	}
@@ -59,6 +62,8 @@ func (s *Service) Create(ctx context.Context, request *tenderspb.Tender_CreateRe
 }
 
 func (s *Service) Get(ctx context.Context, request *tenderspb.Tender_GetRequest) (*tenderspb.Tender_GetResponse, error) {
+	logrus.Debugf("Tenders/Get %v", request)
+
 	tender, err := s.tendersController.Get(ctx, request.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "getting tender: %v", err)
@@ -71,6 +76,8 @@ func (s *Service) Get(ctx context.Context, request *tenderspb.Tender_GetRequest)
 }
 
 func (s *Service) Close(ctx context.Context, request *tenderspb.Tender_CloseRequest) (*tenderspb.Tender_CloseResponse, error) {
+	logrus.Debugf("Tenders/Close %v", request)
+
 	tender, err := s.tendersController.Get(ctx, request.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "getting tender: %v", err)

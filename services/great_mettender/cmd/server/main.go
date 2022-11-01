@@ -9,10 +9,12 @@ import (
 	"encoding/pem"
 	"math/big"
 	"os"
+	"sync"
 	"time"
 
 	"great_mettender/internal/auth"
 	"great_mettender/internal/bids"
+	"great_mettender/internal/cleaner"
 	"great_mettender/internal/controllers"
 	"great_mettender/internal/executor"
 	"great_mettender/internal/pinger"
@@ -31,6 +33,8 @@ import (
 )
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
+
 	logrus.Info("Starting service")
 
 	db, err := gorm.Open(postgres.Open(os.Getenv("PG_DSN")), &gorm.Config{})
@@ -53,15 +57,10 @@ func main() {
 
 	exe := executor.NewExecutor(os.Getenv("INTERFUCK_PATH"))
 
+	clean := cleaner.New(db, time.Minute*20)
+
 	tendersService := tenders.NewService(tendersController, bidsController)
 	bidsService := bids.NewService(tendersController, bidsController, exe)
-
-	tlsConf := generateTLSConfig()
-	ql, err := quic.ListenAddr(":9090", tlsConf, nil)
-	if err != nil {
-		logrus.Fatalf("error listening addr: %v", err)
-	}
-	listener := qnet.Listen(ql)
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(auth.UnaryServerInterceptor()))
 	pingerpb.RegisterPingerServiceServer(s, &pinger.Service{})
@@ -71,11 +70,31 @@ func main() {
 	// Not like anybody could call it over quic-grpc though.
 	reflection.Register(s)
 
+	tlsConf := generateTLSConfig()
+	ql, err := quic.ListenAddr(":9090", tlsConf, nil)
+	if err != nil {
+		logrus.Fatalf("error listening addr: %v", err)
+	}
+	listener := qnet.Listen(ql)
+
+	runCtx, runCancel := context.WithCancel(context.Background())
+	defer runCancel()
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		clean.Start(runCtx)
+	}()
+
 	logrus.Infof("listening at %v", listener.Addr())
 	if err := s.Serve(listener); err != nil {
 		logrus.Fatalf("error serving listener: %v", err)
 	}
 	logrus.Info("stopped server")
+
+	wg.Wait()
+	logrus.Info("Finished shutting down")
 }
 
 func generateTLSConfig() *tls.Config {
