@@ -2,21 +2,15 @@ package executor
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"time"
 
 	"great_mettender/internal/models"
-	"great_mettender/pkg/interfuck"
-
-	"github.com/klauspost/compress/zstd"
 )
 
 const timeout = time.Second * 10
@@ -27,46 +21,6 @@ func NewExecutor(path string) *Executor {
 
 type Executor struct {
 	path string
-}
-
-func decode(s string) ([]byte, error) {
-	step1, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return nil, fmt.Errorf("decoding step1: %w", err)
-	}
-	step2, err := zstd.NewReader(bytes.NewReader(step1))
-	if err != nil {
-		return nil, fmt.Errorf("decoder step2: %w", err)
-	}
-	step3, err := gzip.NewReader(step2)
-	if err != nil {
-		return nil, fmt.Errorf("decoder step3: %w", err)
-	}
-
-	// Protect our memory.
-	res, err := io.ReadAll(io.LimitReader(step3, 100000))
-	if err != nil {
-		return nil, fmt.Errorf("reading data: %w", err)
-	}
-	return res, nil
-}
-
-func (e *Executor) fakeExecute(program, input string) (*models.ExecutionResult, error) {
-	prog, _ := decode(program)
-	inp, _ := decode(input)
-
-	p, err := interfuck.Compile(string(prog), 100000000)
-	if err != nil {
-		return nil, fmt.Errorf("compilation: %w", err)
-	}
-	out, ops, err := p.Run(inp)
-	if err != nil {
-		return nil, fmt.Errorf("running: %w", err)
-	}
-	return &models.ExecutionResult{
-		Output: out,
-		Ops:    uint32(ops),
-	}, nil
 }
 
 func (e *Executor) Execute(ctx context.Context, program, input string) (*models.ExecutionResult, error) {
