@@ -36,11 +36,6 @@ FlexinPointService::FlexinPointService() {
                   "VARCHAR({}), length BIGINT, PRIMARY KEY (start, finish))",
                   kMaxStationNameSize, kMaxStationNameSize));
 
-  w.exec(
-      fmt::format("CREATE UNIQUE INDEX IF NOT EXISTS stations_idx ON stations "
-                  "((attributes ->> {}))",
-                  w.quote(kName)));
-
   w.commit();
 }
 
