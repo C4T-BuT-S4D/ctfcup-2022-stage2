@@ -1,13 +1,14 @@
 const std = @import("std");
 const http = @import("http");
 const os = std.os;
+const auth = @import("./auth.zig");
 
 pub const Server = struct {
     allocator: std.mem.Allocator,
     address: std.net.Address,
     context: Context,
 
-    pub fn init(allocator: std.mem.Allocator, address: []const u8) !Server {
+    pub fn init(allocator: std.mem.Allocator, authSvc: *auth.Service, address: []const u8) !Server {
         var it = std.mem.split(u8, address, ":");
         var host: []const u8 = undefined;
         var port: u16 = undefined;
@@ -21,53 +22,53 @@ pub const Server = struct {
             return error.InvalidIPAddressFormat;
         }
 
-        return Server{ .context = .{}, .allocator = allocator, .address = try std.net.Address.parseIp(host, port) };
+        return Server{
+            .context = .{
+                .authSvc = authSvc,
+            },
+            .allocator = allocator,
+            .address = try std.net.Address.parseIp(host, port),
+        };
     }
 
     pub fn run(self: *Server) void {
         self.runErr() catch |err| {
-            std.log.err("running http server: {}", .{err});
+            std.log.err("error running http server: {}", .{err});
         };
     }
 
     fn runErr(self: *Server) !void {
         const builder = http.router.Builder(*Context);
+        std.log.info("starting server on {}", .{self.address});
 
         try http.listenAndServe(self.allocator, self.address, &self.context, comptime http.router.Router(*Context, &.{
-            builder.get("/sign", sign),
-            builder.get("/unsign/:token"),
+            builder.post("/sign", sign),
+            builder.get("/unsign/:token", unsign),
         }));
     }
 };
 
-const Context = struct {};
+const Context = struct {
+    authSvc: *auth.Service,
+};
 
-fn sign(_: *Context, response: *http.Response, request: http.Request) !void {}
+fn sign(ctx: *Context, response: *http.Response, request: http.Request) !void {
+    if (request.body().len == 0) {
+        return response.writeHeader(.bad_request);
+    }
 
-fn unsign(_: *Context, response: *http.Response, request: http.Request) !void {}
-
-fn index(_: *Context, response: *http.Response, _: http.Request) !void {
-    try response.headers.put("Content-Type", "text/html");
-    try response.writer().writeAll(
-        \\<!DOCTYPE html>
-        \\<html>
-        \\<head>
-        \\    <meta charset="utf-8" />
-        \\</head>
-        \\<body>
-        \\    <a href="/metrics">Metrics</a>
-        \\</body>
-        \\</html>
-        \\
-    );
+    const signed = try ctx.authSvc.sign(request.arena, request.body());
+    try response.writer().writeAll(signed);
 }
 
-fn metrics(_: *Context, response: *http.Response, _: http.Request) !void {
-    const flag = os.getenv("FLAG") orelse "fakeflag";
+fn unsign(ctx: *Context, response: *http.Response, request: http.Request, token: []const u8) !void {
+    const unsigned = ctx.authSvc.unsign(request.arena, token) catch |err| {
+        switch (err) {
+            error.InvalidToken => return response.writeHeader(.bad_request),
+            else => return err,
+        }
+    };
 
-    try response.headers.put("Content-Type", "text/plain; version=0.0.4");
-    try response.writer().print(
-        \\app{{flag="{s}"}} 1
-        \\
-    , .{flag});
+    try response.headers.put("Content-Type", "application/octet-stream");
+    try response.writer().writeAll(unsigned);
 }
