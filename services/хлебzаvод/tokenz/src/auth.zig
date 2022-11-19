@@ -40,7 +40,7 @@ pub const Service = struct {
         try self.save();
     }
 
-    fn save(self: *Service) !void {
+    pub fn save(self: *Service) !void {
         var file = try std.fs.cwd().createFile(self.path, .{});
         defer file.close();
 

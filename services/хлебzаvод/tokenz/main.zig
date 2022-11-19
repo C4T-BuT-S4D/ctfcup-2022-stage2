@@ -1,7 +1,7 @@
 const std = @import("std");
 // const web = @import("./lib/web.zig");
 const auth = @import("./src/auth.zig");
-// const graceful = @import("./lib/graceful.zig");
+const graceful = @import("./src/graceful.zig");
 
 // pub const io_mode = .evented;
 
@@ -16,5 +16,5 @@ pub fn main() !void {
     // var server = try web.Server.init(gpa.allocator(), "0.0.0.0:80");
 
     // _ = async server.run();
-    // try graceful.run();
+    try graceful.run(&svc);
 }
