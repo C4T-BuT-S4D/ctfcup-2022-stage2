@@ -75,6 +75,51 @@ pub const Service = struct {
         return token;
     }
 
+    pub fn unsign(self: *Service, allocator: std.mem.Allocator, data: []const u8) ![]const u8 {
+        if (std.mem.count(u8, data, ".") != 3) {
+            return error.InvalidToken;
+        }
+
+        const decoder = std.base64.url_safe_no_pad.Decoder;
+        var spliterator = std.mem.split(u8, data, ".");
+        var parts: [4][]const u8 = undefined;
+        for (parts) |_, index| {
+            parts[index] = spliterator.next() orelse unreachable;
+
+            var decoded = try allocator.alloc(
+                u8,
+                decoder.calcSizeForSlice(parts[index]) catch return error.InvalidToken,
+            );
+            decoder.decode(decoded, parts[index]) catch return error.InvalidToken;
+            parts[index] = decoded;
+        }
+
+        var encryptedData = parts[0];
+        var encryptedTokenKey = parts[1];
+        var nonce = parts[2];
+        var tag = parts[3];
+
+        if (encryptedTokenKey.len != Service.tokenKeyLength) {
+            return error.InvalidToken;
+        } else if (nonce.len != aes.nonce_length) {
+            return error.InvalidToken;
+        } else if (tag.len != aes.tag_length) {
+            return error.InvalidToken;
+        }
+
+        var tokenKey = try allocator.alloc(u8, Service.tokenKeyLength);
+        aes.decrypt(
+            tokenKey,
+            encryptedTokenKey,
+            tag[0..aes.tag_length].*,
+            encryptedData,
+            nonce[0..aes.nonce_length].*,
+            self.secretKey,
+        ) catch return error.InvalidToken;
+
+        return tokenKey;
+    }
+
     fn generateTokenKey(_: *Service) ![Service.tokenKeyLength]u8 {
         var key: [Service.tokenKeyLength]u8 = undefined;
         std.crypto.random.bytes(key[0..]);
