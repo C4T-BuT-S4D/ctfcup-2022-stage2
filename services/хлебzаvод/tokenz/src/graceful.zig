@@ -5,7 +5,7 @@ const shutdownDelayMs = 500;
 var shutdownMutex = std.Thread.Mutex{};
 var shutdownCondition = std.Thread.Condition{};
 
-pub fn run(auth: anytype) !void {
+pub fn run() !void {
     var gracefulShutdownAct = os.Sigaction{
         .handler = .{ .handler = shutdown },
         .mask = os.empty_sigset,
@@ -17,10 +17,6 @@ pub fn run(auth: anytype) !void {
     shutdownMutex.lock();
     defer shutdownMutex.unlock();
     shutdownCondition.wait(&shutdownMutex);
-
-    auth.save() catch |err| {
-        std.log.err("failed to save auth state: {s}", .{@errorName(err)});
-    };
 
     std.log.info("shutting down in {}ms", .{shutdownDelayMs});
     std.time.sleep(shutdownDelayMs * std.time.ns_per_ms);

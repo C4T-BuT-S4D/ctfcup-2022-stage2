@@ -13,5 +13,5 @@ pub fn main() !void {
     var server = try web.Server.init(allocator, &svc, "0.0.0.0:80");
 
     _ = async server.run();
-    try graceful.run(&svc);
+    try graceful.run();
 }
