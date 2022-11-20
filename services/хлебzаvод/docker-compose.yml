@@ -5,16 +5,39 @@ services:
     build: ./tokenz
     restart: unless-stopped
     volumes:
-      - ./authdata:/usr/local/tokenz/data
+      - authdata:/usr/local/tokenz/data
     ports:
-      - 41380:41380
+      - 41380:80
     networks:
       - services
+  zavod:
+    build:
+      context: ./apiz
+      args:
+        APP: zаvод
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: zavod
+      DB_PASSWORD: zavod-password
+      AUTH_HOST: tokenz
+    ports:
+      - 41381:80
+    networks:
+      - services
+      - db
+    depends_on:
+      tokenz:
+        condition: service_started
+      db:
+        condition: service_healthy
   db:
     image: postgres:15.1
     environment:
       POSTGRES_PASSWORD: password
+      ZAVOD_USER: zavod
       ZAVOD_PASSWORD: zavod-password
+      MAGAZ_USER: magaz
       MAGAZ_PASSWORD: magaz-password
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -23,6 +46,11 @@ services:
       - 5432:5432
     networks:
       - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:

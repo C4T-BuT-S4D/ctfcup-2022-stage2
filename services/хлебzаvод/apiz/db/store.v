@@ -2,28 +2,7 @@ module db
 
 import pg
 
-pub enum ErrorCode as u8 {
-	not_found
-	duplicate
-}
-
-pub struct StoreError {
-	Error
-	e ErrorCode
-}
-
-fn (err StoreError) msg() string {
-	return 'store error: ${err.e}'
-}
-
-pub fn is_error(err IError, code ErrorCode) bool {
-	if err is StoreError {
-		return err.e == code
-	}
-	return false
-}
-
-struct Store {
+pub struct Store {
 	db pg.DB
 }
 

@@ -30,17 +30,13 @@ pub fn (s &Store) list_orders(username string) ![]Order {
 pub fn (s &Store) get_order(id string) !Order {
 	rows := s.db.exec_param('select bread, created_at from orders where id = $1', id) or {
 		if err.msg().contains('invalid input syntax for type uuid') {
-			return IError(StoreError{
-				e: .not_found
-			})
+			return known_error(.not_found)
 		}
 		return err
 	}
 
 	if rows.len != 1 {
-		return IError(StoreError{
-			e: .not_found
-		})
+		return known_error(.not_found)
 	}
 
 	return Order{

@@ -19,9 +19,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     created_at timestamp not null default now()
   );
 
-  create user zavod with encrypted password '$ZAVOD_PASSWORD';
-  grant select, insert, delete on users, orders to zavod;
+  create user '$ZAVOD_USER' with encrypted password '$ZAVOD_PASSWORD';
+  grant select, insert, delete on users, orders to '$ZAVOD_USER';
 
-  create user magaz with encrypted password '$MAGAZ_PASSWORD';
-  grant select on orders to magaz;
+  create user '$MAGAZ_USER' with encrypted password '$MAGAZ_PASSWORD';
+  grant select on orders to '$MAGAZ_USER';
 EOSQL

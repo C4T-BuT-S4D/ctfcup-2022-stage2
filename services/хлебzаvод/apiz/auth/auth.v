@@ -5,7 +5,7 @@ import encoding.base64
 import json
 import net.http
 
-struct Service {
+pub struct Service {
 	url string
 }
 
