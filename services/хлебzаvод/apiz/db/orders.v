@@ -2,14 +2,15 @@ module db
 
 import time
 
-struct Order {
-	bread string
-	ts    time.Time
+pub struct Order {
+	bread     string
+	recipient string
+	ts        time.Time
 }
 
-pub fn (s &Store) create_order(username string, bread string) !string {
-	rows := s.db.exec_param2('insert into orders (username, bread) values ($1, $2) returning id',
-		username, bread)!
+pub fn (s &Store) create_order(username string, bread string, recipient string) !string {
+	rows := s.db.exec_param_many('insert into orders (username, bread, recipient) values ($1, $2, $3) returning id',
+		[username, bread, recipient])!
 	return rows[0].vals[0]
 }
 
@@ -28,7 +29,8 @@ pub fn (s &Store) list_orders(username string) ![]Order {
 }
 
 pub fn (s &Store) get_order(id string) !Order {
-	rows := s.db.exec_param('select bread, created_at from orders where id = $1', id) or {
+	rows := s.db.exec_param('select bread, recipient, created_at from orders where id = $1',
+		id) or {
 		if err.msg().contains('invalid input syntax for type uuid') {
 			return known_error(.not_found)
 		}
@@ -39,8 +41,10 @@ pub fn (s &Store) get_order(id string) !Order {
 		return known_error(.not_found)
 	}
 
+	vals := rows[0].vals
 	return Order{
-		bread: rows[0].vals[0]
-		ts: time.parse(rows[0].vals[1])!
+		bread: vals[0]
+		recipient: vals[1]
+		ts: time.parse(vals[2])!
 	}
 }

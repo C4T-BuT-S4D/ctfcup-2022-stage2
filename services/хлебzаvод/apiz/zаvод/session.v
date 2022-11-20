@@ -28,7 +28,7 @@ pub fn (mut app App) before_request() {
 	if !token.starts_with(auth_prefix) {
 		return
 	}
-	token = token.substr(auth_prefix.len, token.len)
+	token = token.after(auth_prefix)
 
 	session := app.auth.unsign_json<Session>(token) or {
 		if err is auth.TokenError {
