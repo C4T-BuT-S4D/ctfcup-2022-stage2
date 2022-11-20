@@ -10,11 +10,11 @@ pub fn (mut app App) create_user(username string, password string) vweb.Result {
 		return app.error(422, 'ник должен быть не короче 3-х символов')
 	} else if password.len < 5 {
 		return app.error(422, 'пароль должен быть не короче 5-ти символов')
-	} else if username.len > 20 || password.len > 20 {
-		return app.error(422, 'ник и пароль не должны быть длиннее 20-ти символов')
+	} else if username.len > 10 || password.len > 10 {
+		return app.error(422, 'ник и пароль не должны быть длиннее 10-ти символов')
 	}
 
-	mut username_re := regex.regex_opt(r'^[a-z\d]{3,20}$') or {
+	mut username_re := regex.regex_opt(r'^[a-z\d]{3,10}$') or {
 		return app.internal_error('compiling username regex: ${err}')
 	}
 	if !username_re.matches_string(username) {
