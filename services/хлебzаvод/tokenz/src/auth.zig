@@ -2,7 +2,7 @@ const std = @import("std");
 const aes = std.crypto.aead.aes_gcm.Aes256Gcm;
 
 pub const Service = struct {
-    const tokenKeyLength = 4;
+    const tokenKeyLength = 16;
 
     path: []const u8,
     secretKey: [aes.key_length]u8 = std.mem.zeroes([aes.key_length]u8),
@@ -135,11 +135,45 @@ pub const Service = struct {
     }
 
     fn encryptData(_: *Service, allocator: std.mem.Allocator, tokenKey: [Service.tokenKeyLength]u8, data: []const u8) ![]const u8 {
+        const N: usize = 256;
+        var state: [N]u8 = undefined;
+        var i: u8 = 0;
+        while (true) : (i += 1) {
+            state[i] = i;
+
+            if (i == N - 1) {
+                break;
+            }
+        }
+
+        var j: u8 = 0;
+        i = 0;
+        while (i < N) : (i += 1) {
+            var t: u8 = undefined;
+            _ = @addWithOverflow(u8, state[i], tokenKey[i % tokenKey.len], &t);
+            _ = @addWithOverflow(u8, j, t, &j);
+
+            std.mem.swap(u8, &state[i], &state[j]);
+            if (i == N - 1) {
+                break;
+            }
+        }
+
         const encrypted = try allocator.alloc(u8, data.len);
         std.mem.copy(u8, encrypted, data);
 
+        i = 0;
+        j = 0;
         for (data) |_, index| {
-            encrypted[index] ^= tokenKey[index % tokenKey.len];
+            _ = @addWithOverflow(u8, i, 1, &i);
+            _ = @addWithOverflow(u8, j, state[i], &j);
+
+            std.mem.swap(u8, &state[i], &state[j]);
+
+            var t: u8 = undefined;
+            _ = @addWithOverflow(u8, state[i], state[j], &t);
+
+            encrypted[index] ^= state[t];
         }
         return encrypted;
     }
