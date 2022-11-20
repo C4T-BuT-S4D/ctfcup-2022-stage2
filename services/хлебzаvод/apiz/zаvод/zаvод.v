@@ -8,11 +8,11 @@ import vweb
 
 struct App {
 	vweb.Context
-	store   db.Store     [vweb_global]
-	auth    auth.Service [vweb_global]
+	store db.Store     [vweb_global]
+	auth  auth.Service [vweb_global]
 mut:
 	session Session
-	log log.Log [vweb_global]
+	log     log.Log [vweb_global]
 }
 
 fn main() {
@@ -28,7 +28,6 @@ fn main() {
 	app := &App{
 		log: log.Log{
 			level: .debug
-			output_label: 'zаvод'
 		}
 		store: store
 		auth: service

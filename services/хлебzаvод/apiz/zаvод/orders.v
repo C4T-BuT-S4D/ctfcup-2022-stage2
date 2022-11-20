@@ -31,7 +31,9 @@ pub fn (mut app App) create_order(bread string, recipient string) vweb.Result {
 	id := app.store.create_order(app.session.username, bread, recipient) or {
 		return app.internal_error('creating order: ${err}')
 	}
-	return app.json<CreateOrderResponse>(CreateOrderResponse{id})
+
+	voucher := app.auth.sign(id) or { return app.internal_error('signing order id: ${err}') }
+	return app.json<CreateOrderResponse>(CreateOrderResponse{voucher})
 }
 
 ['/api/orders'; get]

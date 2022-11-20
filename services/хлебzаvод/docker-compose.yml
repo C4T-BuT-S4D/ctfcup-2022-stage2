@@ -31,6 +31,27 @@ services:
         condition: service_started
       db:
         condition: service_healthy
+  magaz:
+    build:
+      context: ./apiz
+      args:
+        APP: магаz
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: magaz
+      DB_PASSWORD: magaz-password
+      AUTH_HOST: tokenz
+    ports:
+      - 41382:80
+    networks:
+      - services
+      - db
+    depends_on:
+      tokenz:
+        condition: service_started
+      db:
+        condition: service_healthy
   db:
     image: postgres:15.1
     environment:
