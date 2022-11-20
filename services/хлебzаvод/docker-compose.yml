@@ -6,8 +6,6 @@ services:
     restart: unless-stopped
     volumes:
       - authdata:/usr/local/tokenz/data
-    ports:
-      - 41380:80
     networks:
       - services
   zavod:
@@ -22,7 +20,7 @@ services:
       DB_PASSWORD: zavod-password
       AUTH_HOST: tokenz
     ports:
-      - 41381:80
+      - 41384:80
     networks:
       - services
       - db
@@ -43,7 +41,7 @@ services:
       DB_PASSWORD: magaz-password
       AUTH_HOST: tokenz
     ports:
-      - 41382:80
+      - 41385:80
     networks:
       - services
       - db
@@ -63,8 +61,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
-    ports:
-      - 5432:5432
     networks:
       - db
     healthcheck:
