@@ -2,6 +2,8 @@ const std = @import("std");
 const aes = std.crypto.aead.aes_gcm.Aes256Gcm;
 
 pub const Service = struct {
+    const tokenKeyLength = 4;
+
     path: []const u8,
     secretKey: [aes.key_length]u8 = std.mem.zeroes([aes.key_length]u8),
 
@@ -41,14 +43,17 @@ pub const Service = struct {
     }
 
     pub fn sign(self: *Service, allocator: std.mem.Allocator, data: []const u8) ![]const u8 {
-        var encryptedData = try allocator.alloc(u8, data.len);
+        const tokenKey = try self.generateTokenKey();
+        const encryptedData = try self.encryptData(allocator, tokenKey, data);
+
         var nonce = try self.generateNonce();
+        var encryptedTokenKey: [Service.tokenKeyLength]u8 = undefined;
         var tag: [aes.tag_length]u8 = undefined;
 
-        aes.encrypt(encryptedData, &tag, data, &.{}, nonce, self.secretKey);
+        aes.encrypt(encryptedTokenKey[0..], &tag, tokenKey[0..], encryptedData, nonce, self.secretKey);
 
         const encoder = std.base64.url_safe_no_pad.Encoder;
-        const parts = [_][]const u8{ encryptedData, nonce[0..], tag[0..] };
+        const parts = [_][]const u8{ encryptedData, encryptedTokenKey[0..], nonce[0..], tag[0..] };
         var size: usize = 0;
         for (parts) |part, index| {
             size += encoder.calcSize(part.len);
@@ -71,13 +76,13 @@ pub const Service = struct {
     }
 
     pub fn unsign(self: *Service, allocator: std.mem.Allocator, data: []const u8) ![]const u8 {
-        if (std.mem.count(u8, data, ".") != 2) {
+        if (std.mem.count(u8, data, ".") != 3) {
             return error.InvalidToken;
         }
 
         const decoder = std.base64.url_safe_no_pad.Decoder;
         var spliterator = std.mem.split(u8, data, ".");
-        var parts: [3][]const u8 = undefined;
+        var parts: [4][]const u8 = undefined;
         for (parts) |_, index| {
             parts[index] = spliterator.next() orelse unreachable;
 
@@ -90,26 +95,36 @@ pub const Service = struct {
         }
 
         var encryptedData = parts[0];
-        var nonce = parts[1];
-        var tag = parts[2];
+        var encryptedTokenKey = parts[1];
+        var nonce = parts[2];
+        var tag = parts[3];
 
-        if (nonce.len != aes.nonce_length) {
+        if (encryptedTokenKey.len != Service.tokenKeyLength) {
+            return error.InvalidToken;
+        } else if (nonce.len != aes.nonce_length) {
             return error.InvalidToken;
         } else if (tag.len != aes.tag_length) {
             return error.InvalidToken;
         }
 
-        var decryptedData = try allocator.alloc(u8, encryptedData.len);
+        var tokenKey = try allocator.alloc(u8, Service.tokenKeyLength);
         aes.decrypt(
-            decryptedData,
-            encryptedData,
+            tokenKey,
+            encryptedTokenKey,
             tag[0..aes.tag_length].*,
-            &.{},
+            encryptedData,
             nonce[0..aes.nonce_length].*,
             self.secretKey,
         ) catch return error.InvalidToken;
 
-        return decryptedData;
+        return tokenKey;
+    }
+
+    fn generateTokenKey(_: *Service) ![Service.tokenKeyLength]u8 {
+        var key: [Service.tokenKeyLength]u8 = undefined;
+        std.crypto.random.bytes(key[0..]);
+
+        return key;
     }
 
     fn generateNonce(_: *Service) ![aes.nonce_length]u8 {
@@ -117,5 +132,15 @@ pub const Service = struct {
         std.crypto.random.bytes(nonce[0..]);
 
         return nonce;
+    }
+
+    fn encryptData(_: *Service, allocator: std.mem.Allocator, tokenKey: [Service.tokenKeyLength]u8, data: []const u8) ![]const u8 {
+        const encrypted = try allocator.alloc(u8, data.len);
+        std.mem.copy(u8, encrypted, data);
+
+        for (data) |_, index| {
+            encrypted[index] ^= tokenKey[index % tokenKey.len];
+        }
+        return encrypted;
     }
 };
