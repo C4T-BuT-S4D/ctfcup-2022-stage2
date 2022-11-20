@@ -4,11 +4,13 @@ const aes = std.crypto.aead.aes_gcm.Aes256Gcm;
 pub const Service = struct {
     const tokenKeyLength = 16;
 
+    random: DevUrandom,
     path: []const u8,
     secretKey: [aes.key_length]u8 = std.mem.zeroes([aes.key_length]u8),
 
     pub fn init(path: []const u8) !Service {
         var service = Service{
+            .random = try DevUrandom.init(),
             .path = path,
         };
 
@@ -31,7 +33,7 @@ pub const Service = struct {
     }
 
     fn create(self: *Service) !void {
-        std.crypto.random.bytes(self.secretKey[0..]);
+        try self.random.read(self.secretKey[0..]);
         try self.save();
     }
 
@@ -120,16 +122,16 @@ pub const Service = struct {
         return tokenKey;
     }
 
-    fn generateTokenKey(_: *Service) ![Service.tokenKeyLength]u8 {
+    fn generateTokenKey(self: *Service) ![Service.tokenKeyLength]u8 {
         var key: [Service.tokenKeyLength]u8 = undefined;
-        std.crypto.random.bytes(key[0..]);
+        try self.random.read(key[0..]);
 
         return key;
     }
 
-    fn generateNonce(_: *Service) ![aes.nonce_length]u8 {
+    fn generateNonce(self: *Service) ![aes.nonce_length]u8 {
         var nonce: [aes.nonce_length]u8 = undefined;
-        std.crypto.random.bytes(nonce[0..]);
+        try self.random.read(nonce[0..]);
 
         return nonce;
     }
@@ -176,5 +178,36 @@ pub const Service = struct {
             encrypted[index] ^= state[t];
         }
         return encrypted;
+    }
+};
+
+// Zig is so shit that std.crypto.rand doesn't work on Linux with io_mode = .evented
+const DevUrandom = struct {
+    fd: std.os.fd_t,
+    file: std.fs.File,
+    br: std.io.BufferedReader(4096, std.fs.File.Reader),
+    mu: std.Thread.Mutex,
+
+    fn init() !DevUrandom {
+        const fd = try std.os.openZ("/dev/urandom", std.os.system.O.RDONLY | std.os.system.O.CLOEXEC, 0);
+        const file = std.fs.File{
+            .handle = fd,
+            .capable_io_mode = .blocking,
+            .intended_io_mode = .blocking,
+        };
+
+        return DevUrandom{
+            .fd = fd,
+            .file = file,
+            .br = std.io.bufferedReader(file.reader()),
+            .mu = .{},
+        };
+    }
+
+    fn read(self: *DevUrandom, buf: []u8) !void {
+        self.mu.lock();
+        defer self.mu.unlock();
+
+        try self.br.reader().readNoEof(buf);
     }
 };

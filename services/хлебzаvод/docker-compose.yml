@@ -1,6 +1,15 @@
 version: "2.4"
 
 services:
+  tokenz:
+    build: ./tokenz
+    restart: unless-stopped
+    volumes:
+      - ./authdata:/usr/local/tokenz/data
+    ports:
+      - 41380:41380
+    networks:
+      - services
   db:
     image: postgres:15.1
     environment:
@@ -13,10 +22,12 @@ services:
     ports:
       - 5432:5432
     networks:
-      - services
+      - db
 
 volumes:
   pgdata:
+  authdata:
 
 networks:
+  db:
   services:
