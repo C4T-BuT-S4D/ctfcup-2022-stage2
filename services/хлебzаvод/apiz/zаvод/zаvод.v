@@ -10,8 +10,8 @@ struct App {
 	vweb.Context
 	store   db.Store     [vweb_global]
 	auth    auth.Service [vweb_global]
-	session ?Session
 mut:
+	session Session
 	log log.Log [vweb_global]
 }
 
@@ -21,7 +21,7 @@ fn main() {
 	}
 
 	service := auth.new_service(os.getenv('AUTH_HOST'))
-	token := service.sign_json<Session>(Session{'test-session'}) or {
+	service.sign_json<Session>(Session{'test-session'}) or {
 		panic('failed to connect to auth service: ${err}')
 	}
 
