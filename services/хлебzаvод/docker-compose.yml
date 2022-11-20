@@ -1,0 +1,22 @@
+version: "2.4"
+
+services:
+  db:
+    image: postgres:15.1
+    environment:
+      POSTGRES_PASSWORD: password
+      ZAVOD_PASSWORD: zavod-password
+      MAGAZ_PASSWORD: magaz-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    ports:
+      - 5432:5432
+    networks:
+      - services
+
+volumes:
+  pgdata:
+
+networks:
+  services:
