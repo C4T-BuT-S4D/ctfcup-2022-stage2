@@ -16,8 +16,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     id uuid primary key default gen_random_uuid(),
     username text not null references users,
     bread text not null,
-    recipient text not null,
-    created_at timestamp not null default now()
+    recipient text not null
   );
 
   create user "$ZAVOD_USER" with encrypted password '$ZAVOD_PASSWORD';

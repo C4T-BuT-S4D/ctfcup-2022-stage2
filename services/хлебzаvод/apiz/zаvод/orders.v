@@ -1,6 +1,7 @@
 module main
 
 import db
+import time
 import vweb
 
 const (
@@ -9,6 +10,7 @@ const (
 )
 
 struct CreateOrderResponse {
+	id      string
 	voucher string
 }
 
@@ -32,8 +34,13 @@ pub fn (mut app App) create_order(bread string, recipient string) vweb.Result {
 		return app.internal_error('creating order: ${err}')
 	}
 
-	voucher := app.auth.sign(id) or { return app.internal_error('signing order id: ${err}') }
-	return app.json<CreateOrderResponse>(CreateOrderResponse{voucher})
+	voucher := app.auth.sign('${time.now().format_ss_micro()}|${id}') or {
+		return app.internal_error('signing order id: ${err}')
+	}
+	return app.json<CreateOrderResponse>(CreateOrderResponse{
+		id: id
+		voucher: voucher
+	})
 }
 
 ['/api/orders'; get]
