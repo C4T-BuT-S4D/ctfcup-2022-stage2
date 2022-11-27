@@ -35,7 +35,8 @@ jobs:
     strategy:
       matrix:
         service:
-          - great_mettender
+        - nucreport
+        - great_mettender
 
     steps:
     - uses: actions/checkout@v2
