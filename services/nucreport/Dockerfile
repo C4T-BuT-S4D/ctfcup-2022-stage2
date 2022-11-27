@@ -25,7 +25,6 @@ COPY entry.sh .
 RUN chmod +x entry.sh
 
 COPY --from=builder /usr/local/cargo/bin/app /usr/local/bin/app
-COPY conf/app/.env .
 
 
 CMD ["./entry.sh"]

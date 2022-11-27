@@ -25,6 +25,14 @@ services:
     volumes:
       - etc:/etc # Persist the users files.
       - users_data:/users # Persist users data.
+    environment:
+      - PG.USER=user
+      - PG.PASSWORD=password
+      - PG.HOST=db
+      - PG.PORT=5432
+      - PG.DBNAME=test
+      - PG.POOL.MAX_SIZE=128
+
 
 volumes:
   users_data:
