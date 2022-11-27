@@ -36,6 +36,7 @@ jobs:
       matrix:
         service:
         - example
+        - nucreport
 
     steps:
     - uses: actions/checkout@v2

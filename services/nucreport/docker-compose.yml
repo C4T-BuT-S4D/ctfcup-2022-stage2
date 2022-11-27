@@ -1,0 +1,32 @@
+version: '2.4'
+services:
+  db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./conf/pg:/docker-entrypoint-initdb.d
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "4222:22"
+    pids_limit: 1024
+    mem_limit: 1024m
+    cpus: 2
+    depends_on:
+      - db
+    volumes:
+      - etc:/etc # Persist the users files.
+      - users_data:/users # Persist users data.
+
+volumes:
+  users_data:
+  etc:
+  db_data:
