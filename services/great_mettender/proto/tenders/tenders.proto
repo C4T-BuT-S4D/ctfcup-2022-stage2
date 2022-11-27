@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package tenders;
+option go_package = "great_mettender/pkg/proto/tenders";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+message Tender {
+    message CreateRequest {
+        Tender tender = 1;
+    }
+
+    message CreateResponse {
+        Tender tender = 1;
+    }
+
+    message GetRequest {
+        string id = 1;
+    }
+
+    message GetResponse {
+        Tender tender = 1;
+    }
+
+    message CloseRequest {
+        string id = 1;
+    }
+
+    message CloseResponse {
+        tenders.Bid winning_bid = 1;
+    }
+
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    float required_reputation = 4;
+    string winner = 5;
+    string author = 6;
+    bool private = 7;
+    bool finished = 8;
+    string program_input = 9;
+    google.protobuf.Timestamp created_at = 10;
+
+    reserved 11 to 100;
+}
+
+message Bid {
+    message CreateRequest {
+        Bid bid = 1;
+    }
+
+    message CreateResponse {
+        Bid bid = 1;
+    }
+
+    message ExecuteRequest {
+        string id = 1;
+    }
+
+    message ExecuteResponse {
+        string output = 1;
+        uint32 ops = 2;
+        google.protobuf.Duration elapsed = 3;
+        string error = 4;
+    }
+
+    string id = 1;
+    string tender_id = 2;
+    double price = 3;
+    string description = 4;
+    string program = 5;
+}
