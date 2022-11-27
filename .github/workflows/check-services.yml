@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         service:
-        - example
+          - great_mettender
 
     steps:
     - uses: actions/checkout@v2
