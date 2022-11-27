@@ -4,26 +4,32 @@ import db
 import regex
 import vweb
 
-['/api/user'; post]
-pub fn (mut app App) create_user(username string, password string) vweb.Result {
-	if username.len < 3 {
-		return app.error(422, 'ник должен быть не короче 3-х символов')
-	} else if password.len < 5 {
-		return app.error(422, 'пароль должен быть не короче 5-ти символов')
-	} else if username.len > 10 || password.len > 10 {
-		return app.error(422, 'ник и пароль не должны быть длиннее 10-ти символов')
+['/register'; get; post]
+pub fn (mut app App) register() vweb.Result {
+	if app.session.username != '' {
+		return app.redirect('/')
 	}
 
-	mut username_re := regex.regex_opt(r'^[a-z\d]{3,10}$') or {
-		return app.internal_error('compiling username regex: ${err}')
+	if app.req.method == .get {
+		$vweb.html()
+		return app.ret()
 	}
-	if !username_re.matches_string(username) {
-		return app.error(422, 'ник может состоять только из строчных букв латинского алфавита и цифр')
+
+	username := app.form['username']
+	password := app.form['password']
+	validated := app.register_validate(username, password) or {
+		return app.internal_error('${err}')
+	}
+	if !validated {
+		$vweb.html()
+		return app.ret()
 	}
 
 	app.store.create_user(username, password) or {
 		if db.is_error(err, .duplicate) {
-			return app.error(409, 'пользователь с таким ником уже зарегистрирован')
+			app.error(.conflict, 'Пользователь с таким ником уже зарегистрирован')
+			$vweb.html()
+			return app.ret()
 		}
 		return app.internal_error('creating user: ${err}')
 	}
@@ -31,11 +37,45 @@ pub fn (mut app App) create_user(username string, password string) vweb.Result {
 	return app.authorize(username)
 }
 
-['/api/session'; post]
-pub fn (mut app App) create_session(username string, password string) vweb.Result {
+fn (mut app App) register_validate(username string, password string) !bool {
+	if username.len < 3 {
+		app.error(.unprocessable_entity, 'Ник должен быть не короче 3-х символов')
+	} else if password.len < 5 {
+		app.error(.unprocessable_entity, 'Пароль должен быть не короче 5-ти символов')
+	} else if username.len > 10 || password.len > 10 {
+		app.error(.unprocessable_entity, 'Ник и пароль не должны быть длиннее 10-ти символов')
+	} else {
+		mut username_re := regex.regex_opt(r'^[a-z\d]{3,10}$') or {
+			return error('compiling username regex: ${err}')
+		}
+		
+		if !username_re.matches_string(username) {
+			app.error(.unprocessable_entity, 'Ник может состоять только из строчных букв латинского алфавита и цифр')
+			return false
+		}
+		return true
+	}
+	return false
+}
+
+['/login'; get; post]
+pub fn (mut app App) login() vweb.Result {
+	if app.session.username != '' {
+		return app.redirect('/')
+	}
+
+	if app.req.method == .get {
+		$vweb.html()
+		return app.ret()
+	}
+
+	username := app.form['username']
+	password := app.form['password']
 	app.store.authenticate_user(username, password) or {
 		if db.is_error(err, .not_found) {
-			return app.error(401, 'не существует пользователя с таким ником или паролем')
+			app.error(.unauthorized, 'Не существует пользователя с таким ником или паролем')
+			$vweb.html()
+			return app.ret()
 		}
 		return app.internal_error('authenticating user: ${err}')
 	}

@@ -1,6 +1,7 @@
 module db
 
-import time
+import arrays
+import pg
 
 pub struct Order {
 pub:
@@ -17,25 +18,16 @@ pub fn (s &Store) create_order(username string, bread string, recipient string) 
 
 pub fn (s &Store) list_orders(username string) ![]Order {
 	rows := s.db.exec_param('select id, bread from orders where username = $1', username)!
-	mut orders := []Order{len: rows.len}
-
-	for i, row in rows {
-		orders[i] = Order{
+	return arrays.map_indexed<pg.Row, Order>(rows, fn (_ int, row pg.Row) Order {
+		return Order{
 			id: row.vals[0]
 			bread: row.vals[1]
 		}
-	}
-	return orders
+	})
 }
 
 pub fn (s &Store) get_order(id string) !Order {
-	rows := s.db.exec_param('select bread, recipient from orders where id = $1', id) or {
-		if err.msg().contains('invalid input syntax for type uuid') {
-			return known_error(.not_found)
-		}
-		return err
-	}
-
+	rows := s.db.exec_param('select bread, recipient from orders where id = $1', id)!
 	if rows.len != 1 {
 		return known_error(.not_found)
 	}

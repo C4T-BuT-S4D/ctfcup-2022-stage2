@@ -1,15 +1,16 @@
 module main
 
 import log
+import net.http
 import vweb
 
-struct ApiError {
-	error string
+fn (mut app App) ret() vweb.Result {
+	return app.ok('')
 }
 
-fn (mut app App) error(code int, message string) vweb.Result {
-	app.status = code.str()
-	return app.json<ApiError>(ApiError{message})
+fn (mut app App) error(status http.Status, message string) {
+	app.status = status.int().str()
+	app.error = message
 }
 
 fn (mut app App) internal_error(message string) vweb.Result {

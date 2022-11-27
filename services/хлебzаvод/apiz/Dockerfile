@@ -16,4 +16,6 @@ COPY . .
 
 RUN mkdir -p /usr/local/$APP && /v/v -o /usr/local/$APP/app $APP
 
+WORKDIR /usr/local/$APP
+COPY ./$APP/public /usr/local/$APP/public
 ENTRYPOINT stdbuf -i0 -o0 -e0 /usr/local/$APP/app

@@ -8,10 +8,12 @@ import vweb
 
 struct App {
 	vweb.Context
-	store db.Store     [vweb_global]
-	auth  auth.Service [vweb_global]
+	store      db.Store     [vweb_global]
+	auth       auth.Service [vweb_global]
+	magaz_port string       [vweb_global]
 mut:
 	session Session
+	error   string
 	log     log.Log [vweb_global]
 }
 
@@ -25,13 +27,15 @@ fn main() {
 		panic('failed to connect to auth service: ${err}')
 	}
 
-	app := &App{
+	mut app := &App{
 		log: log.Log{
 			level: .debug
 		}
 		store: store
 		auth: service
+		magaz_port: os.getenv('MAGAZ_PORT')
 	}
+	app.mount_static_folder_at('./public', '/public')
 
 	vweb.run(app, 80)
 }

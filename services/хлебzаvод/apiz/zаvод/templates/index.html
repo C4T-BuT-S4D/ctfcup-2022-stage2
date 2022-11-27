@@ -1,0 +1,23 @@
+@include 'components/head.html'
+<div class="section">
+  <h2 class="subtitle is-3">Наш хлеб</h2>
+  <div class="container is-flex is-flex-direction-row is-flex-wrap-wrap" style="gap: 2rem">
+    @for bread in bread_kinds
+    <div class="box mb-5" style="width: 30%">
+      <figure class="image is-3by2">
+        <img src="/public/img/${bread}.jpg" style="border-radius: 3px;" />
+      </figure>
+      @if app.session.username != ''
+      <form class="mt-2" action="/order/${bread}" method="get">
+        <div class="field">
+          <div class="control">
+            <button class="button is-warning" type="submit" style="width: 100%">Заказать</button>
+          </div>
+        </div>
+      </form>
+      @end
+    </div>
+    @end
+  </div>
+</div>
+@include 'components/footer.html'

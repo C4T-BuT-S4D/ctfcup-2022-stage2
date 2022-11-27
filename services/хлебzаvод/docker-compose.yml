@@ -19,6 +19,7 @@ services:
       DB_USER: zavod
       DB_PASSWORD: zavod-password
       AUTH_HOST: tokenz
+      MAGAZ_PORT: "41385"
     ports:
       - 41384:80
     networks:

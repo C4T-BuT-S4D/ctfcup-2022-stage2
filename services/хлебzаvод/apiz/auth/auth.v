@@ -2,19 +2,10 @@ module auth
 
 import crypto.rc4
 import encoding.base64
-import json
 import net.http
 
 pub struct Service {
 	url string
-}
-
-pub struct TokenError {
-	Error
-}
-
-fn (err TokenError) msg() string {
-	return 'invalid token'
 }
 
 pub fn new_service(host string) &Service {
@@ -44,15 +35,6 @@ pub fn (s &Service) unsign(token string) !string {
 	}
 
 	return decrypt(base64.url_decode_str(parts[0]), resp.body)
-}
-
-pub fn (s &Service) sign_json<T>(v T) !string {
-	return s.sign(json.encode(v))
-}
-
-pub fn (s &Service) unsign_json<T>(token string) !T {
-	data := s.unsign(token)!
-	return json.decode(T, data)
 }
 
 fn decrypt(data string, key string) !string {

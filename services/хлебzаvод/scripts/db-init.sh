@@ -13,7 +13,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   );
 
   create table orders (
-    id uuid primary key default gen_random_uuid(),
+    id bigint primary key default ('x'||right(gen_random_bytes(4)::text, 8))::bit(32)::bigint,
     username text not null references users,
     bread text not null,
     recipient text not null
