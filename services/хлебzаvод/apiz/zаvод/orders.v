@@ -39,7 +39,7 @@ pub fn (mut app App) order(bread string) vweb.Result {
 	voucher = app.order_voucher(order_id) or {
 		return app.internal_error('signing order id: ${err}')
 	}
-	voucher = 'http://${app.get_header('Host').before(':')}:${app.magaz_port}/order/${voucher}'
+	voucher = 'http://${app.get_header('Host').before(':')}:${app.magaz_port}/order?voucher=${voucher}'
 
 	ordered = true
 	return $vweb.html()

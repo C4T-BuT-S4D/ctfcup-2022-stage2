@@ -4,7 +4,6 @@ import auth
 import db
 import log
 import os
-import time
 import vweb
 
 struct App {
@@ -12,7 +11,8 @@ struct App {
 	store db.Store     [vweb_global]
 	auth  auth.Service [vweb_global]
 mut:
-	log log.Log [vweb_global]
+	error string
+	log   log.Log [vweb_global]
 }
 
 fn main() {
@@ -23,49 +23,33 @@ fn main() {
 	service := auth.new_service(os.getenv('AUTH_HOST'))
 	service.sign('test') or { panic('failed to connect to auth service: ${err}') }
 
-	app := &App{
+	mut app := &App{
 		log: log.Log{
 			level: .debug
 		}
 		store: store
 		auth: service
 	}
+	app.mount_static_folder_at('./public', '/public')
 
 	vweb.run(app, 80)
 }
 
-fn (mut app App) internal_error(message string) vweb.Result {
-	app.log.error('internal error: ${message}')
-	app.status = '500'
-	return app.text('Internal Server Error')
-}
+['/order'; get]
+pub fn (mut app App) order() vweb.Result {
+	mut order := db.Order{}
+	mut capsule := Capsule{}
 
-struct Order {
-	ts        time.Time
-	bread     string
-	recipient string
-}
-
-['/api/receive/:voucher'; get]
-pub fn (mut app App) receive_order(voucher string) vweb.Result {
-	timestamped := app.auth.unsign(voucher) or {
-		app.status = '400'
-		return app.text('У вас недействительный талон! Удостоверьтесь в том, что вы его правильно ввели.')
+	capsule = app.unpack_capsule(app.query['voucher']) or {
+		app.error = 'У вас недействительный талон! Удостоверьтесь в том, что вы его правильно ввели.'
+		$vweb.html()
+		return app.ok('')
 	}
 
-	parts := timestamped.split('|')
-	if parts.len != 2 {
-		return app.internal_error('bad voucher received')
+	order = app.store.get_order(capsule.order_id) or {
+		app.error = 'Хлеб ещё не испечён, придите позже!'
+		$vweb.html()
+		return app.ok('')
 	}
-
-	id := parts[1]
-	ts := time.parse(parts[0]) or {
-		return app.internal_error('unable to parse voucher time: ${err}')
-	}
-
-	order := app.store.get_order(id) or {
-		app.status = '418'
-		return app.text('Хлеб ещё не испечён, придите позже!')
-	}
-	return app.json<Order>(Order{ ts: ts, bread: order.bread, recipient: order.recipient })
+	return $vweb.html()
 }

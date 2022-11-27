@@ -4,6 +4,8 @@ import log
 import net.http
 import vweb
 
+// This is needed because in V $vweb.html() does not actually return from the function...
+// Jesus, f*cking, Christ...
 fn (mut app App) ret() vweb.Result {
 	return app.ok('')
 }
