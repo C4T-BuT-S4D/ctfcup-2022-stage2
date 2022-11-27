@@ -91,7 +91,7 @@ func main() {
 
 	fmt.Printf("exploit bid id is %s, waiting for the checker to close the tender\n", createBid.Bid.Id)
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 2000; i++ {
 		tender, err := tendersClient.Get(ctx, &tenderspb.Tender_GetRequest{Id: tenderID})
 		if err != nil {
 			panic(err)

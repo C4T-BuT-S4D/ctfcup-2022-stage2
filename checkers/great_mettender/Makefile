@@ -14,9 +14,5 @@ build:
 			-o gmt_checker \
 			main.go
 
-.PHONY: compress
-compress:
-	upx --lzma -9 gmt_checker
-
 .PHONY: all
-all: build compress
+all: build
