@@ -17,6 +17,8 @@ services:
   db:
     image: postgres:15-alpine3.16
     restart: unless-stopped
+    cpus: 2
+    mem_limit: 4G
     environment:
       POSTGRES_USER: 'flexinpoint'
       POSTGRES_PASSWORD: 'flexinpoint'
