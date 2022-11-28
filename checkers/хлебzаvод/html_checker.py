@@ -3,7 +3,7 @@ import checklib
 import mimeparse
 
 class Tag(bs4Tag):
-  value: str | None
+  value: str
 
   def __init__(self, value=None, **kwargs):
     super().__init__(**kwargs)
