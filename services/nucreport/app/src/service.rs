@@ -2,7 +2,6 @@ use std::error::Error;
 use std::path::Path;
 use std::sync::Mutex;
 
-use actix_web::web;
 use async_process::Command;
 use deadpool_postgres::Client;
 use rand::Rng;

@@ -3,7 +3,6 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use deadpool_postgres::{Client, Pool};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Mutex;
 
 use crate::service::{
     check_credentials, get_user_paths, insert_user, read_file, reindex_user_files,
@@ -35,7 +34,7 @@ fn error_unauthenticated<T: std::fmt::Display>(e: T) -> HttpResponse {
     HttpResponse::Unauthorized().json(json!({ "error": format!("{}", e) }))
 }
 
-#[post("/login")]
+#[post("/api/login")]
 pub async fn login(
     req: web::Json<AuthCredentials>,
     session: Session,
@@ -64,7 +63,7 @@ pub async fn login(
     }
 }
 
-#[post("/register")]
+#[post("/api/register")]
 pub async fn register(req: web::Json<AuthCredentials>, db_pool: web::Data<Pool>) -> impl Responder {
     let creds = req.into_inner();
 
@@ -79,7 +78,7 @@ pub async fn register(req: web::Json<AuthCredentials>, db_pool: web::Data<Pool>)
     }
 }
 
-#[get("/file")]
+#[get("/api/file")]
 pub async fn get_file(
     read_query: web::Query<ReadFileQuery>,
     session: Session,
@@ -106,7 +105,7 @@ pub async fn get_file(
     }
 }
 
-#[get("/files")]
+#[get("/api/files")]
 pub async fn get_indexed_files(session: Session, db_pool: web::Data<Pool>) -> impl Responder {
     let user = match session.get("user") {
         Err(e) => return error_unauthenticated(e),
@@ -129,7 +128,7 @@ pub async fn get_indexed_files(session: Session, db_pool: web::Data<Pool>) -> im
     }
 }
 
-#[post("/reindex")]
+#[post("/api/reindex")]
 pub async fn reindex(session: Session, db_pool: web::Data<Pool>) -> impl Responder {
     let user = match session.get("user") {
         Err(e) => return error_unauthenticated(e),
