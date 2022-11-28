@@ -8,8 +8,6 @@ services:
       - authdata:/usr/local/tokenz/data
     networks:
       - services
-    ports:
-      - 13337:80
     pids_limit: 256
     mem_limit: 256m
     cpus: 2
@@ -25,8 +23,6 @@ services:
       DB_PASSWORD: zavod-password
       AUTH_HOST: tokenz
       MAGAZ_PORT: "41385"
-    ports:
-      - 81:80
     networks:
       - services
       - db
@@ -49,8 +45,6 @@ services:
       DB_USER: magaz
       DB_PASSWORD: magaz-password
       AUTH_HOST: tokenz
-    ports:
-      - 82:80
     networks:
       - services
       - db
@@ -92,8 +86,6 @@ services:
       - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
     networks:
       - db
-    ports:
-      - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
