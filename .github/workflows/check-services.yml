@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         service:
-        - example
+        - хлебzаvод
 
     steps:
     - uses: actions/checkout@v2
