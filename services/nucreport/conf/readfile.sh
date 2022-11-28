@@ -1,0 +1,5 @@
+#!/bin/bash
+
+FILENAME=$1
+MAXBYTES=$2
+head -c $MAXBYTES $FILENAME

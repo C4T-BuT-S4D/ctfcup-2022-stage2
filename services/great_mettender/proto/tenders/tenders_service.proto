@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package tenders;
+option go_package = "great_mettender/pkg/proto/tenders";
+
+import "tenders/tenders.proto";
+
+service TendersService {
+    rpc Create(tenders.Tender.CreateRequest) returns (tenders.Tender.CreateResponse);
+
+    rpc Get(tenders.Tender.GetRequest) returns (tenders.Tender.GetResponse);
+
+    rpc Close(tenders.Tender.CloseRequest) returns (tenders.Tender.CloseResponse);
+}
+
+service BidService {
+    rpc Create(tenders.Bid.CreateRequest) returns (tenders.Bid.CreateResponse);
+
+    rpc Execute(tenders.Bid.ExecuteRequest) returns (tenders.Bid.ExecuteResponse);
+}

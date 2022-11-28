@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+	CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(100), password VARCHAR(100));
+	CREATE TABLE IF NOT EXISTS file_paths (id SERIAL PRIMARY KEY, filepath VARCHAR(999) UNIQUE, token VARCHAR(50));
+EOSQL
