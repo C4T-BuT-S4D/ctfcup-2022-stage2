@@ -1,0 +1,9 @@
+[requires]
+flatbuffers/2.0.8
+libpqxx/7.7.4
+grpc/1.50.0
+fmt/9.1.0
+
+[generators]
+cmake_find_package
+cmake_paths

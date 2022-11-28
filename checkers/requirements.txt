@@ -1,3 +1,4 @@
 checklib
 beautifulsoup4==4.11.1
 python-mimeparse==1.6.0
+paramiko==2.11.0

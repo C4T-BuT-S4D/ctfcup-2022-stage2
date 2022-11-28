@@ -64,6 +64,7 @@ FORBIDDEN_CHECKER_PATTERNS = [
     "requests"
 ]
 
+
 class ColorType(Enum):
     INFO = '\033[92m'
     WARNING = '\033[93m'
@@ -253,8 +254,8 @@ class Service(BaseValidator):
         cnt_threads = max(1, min(MAX_THREADS, RUNS // 10))
         self._log(f'starting {cnt_threads} checker threads')
         with ThreadPoolExecutor(
-                max_workers=cnt_threads,
-                thread_name_prefix='Executor',
+            max_workers=cnt_threads,
+            thread_name_prefix='Executor',
         ) as executor:
             for _ in executor.map(self._checker.run_all, range(1, RUNS + 1)):
                 pass
@@ -290,7 +291,10 @@ class StructureValidator(BaseValidator):
 
     def validate_file(self, f: Path):
         path = f.relative_to(BASE_DIR)
-        self._error(f.suffix != '.yaml', f'file {path} has .yaml extension')
+
+        if 'docker-compose' in f.name:
+            self._error(f.suffix != '.yaml', f'file {path} has .yaml extension')
+
         self._error(f.name != '.gitkeep', f'{path} found, should be named .keep')
 
         if f.name == 'docker-compose.yml':
@@ -333,7 +337,8 @@ class StructureValidator(BaseValidator):
                 return
 
             for container, container_conf in dc['services'].items():
-                if self._error(isinstance(container_conf, dict), f'config in {path} for container {container} is not dict'):
+                if self._error(isinstance(container_conf, dict),
+                               f'config in {path} for container {container} is not dict'):
                     continue
 
                 for opt in CONTAINER_REQUIRED_OPTIONS:
@@ -342,7 +347,8 @@ class StructureValidator(BaseValidator):
                         f'required option {opt} not in {path} for container {container}',
                     )
 
-                self._error('restart' in container_conf and container_conf['restart'] == 'unless-stopped', f'restart option in {path} for container {container} must be equal to "unless-stopped"')
+                self._error('restart' in container_conf and container_conf['restart'] == 'unless-stopped',
+                            f'restart option in {path} for container {container} must be equal to "unless-stopped"')
 
                 for opt in container_conf:
                     self._error(
@@ -351,13 +357,13 @@ class StructureValidator(BaseValidator):
                     )
 
                 if self._error(
-                        'image' not in container_conf or 'build' not in container_conf,
-                        f'both image and build options in {path} for container {container}'):
+                    'image' not in container_conf or 'build' not in container_conf,
+                    f'both image and build options in {path} for container {container}'):
                     continue
 
                 if self._error(
-                        'image' in container_conf or 'build' in container_conf,
-                        f'both image and build options not in {path} for container {container}'):
+                    'image' in container_conf or 'build' in container_conf,
+                    f'both image and build options not in {path} for container {container}'):
                     continue
 
                 if 'image' in container_conf:
@@ -503,7 +509,7 @@ def dump_tasks(_args):
             'checker': f'{service.name}/checker.py',
             'checker_timeout': info['timeout'],
             'checker_type': checker_type,
-            'places': info['timeout'],
+            'places': info['vulns'],
             'puts': 1,
             'gets': 1,
         })
