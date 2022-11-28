@@ -8,6 +8,8 @@ services:
       - authdata:/usr/local/tokenz/data
     networks:
       - services
+    ports:
+      - 13337:80
     pids_limit: 256
     mem_limit: 256m
     cpus: 2
@@ -24,7 +26,7 @@ services:
       AUTH_HOST: tokenz
       MAGAZ_PORT: "41385"
     ports:
-      - 41384:80
+      - 81:80
     networks:
       - services
       - db
@@ -48,7 +50,7 @@ services:
       DB_PASSWORD: magaz-password
       AUTH_HOST: tokenz
     ports:
-      - 41385:80
+      - 82:80
     networks:
       - services
       - db
@@ -57,6 +59,22 @@ services:
         condition: service_started
       db:
         condition: service_healthy
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 2
+  proxyz:
+    build: ./proxyz
+    restart: unless-stopped
+    volumes:
+      - ./proxy-config.json:/usr/local/proxyz/config.json:ro
+    networks:
+      - services
+    ports:
+      - 41384:81
+      - 41385:82
+    depends_on:
+      - zavod
+      - magaz
     pids_limit: 256
     mem_limit: 256m
     cpus: 2
@@ -74,6 +92,8 @@ services:
       - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
     networks:
       - db
+    ports:
+      - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

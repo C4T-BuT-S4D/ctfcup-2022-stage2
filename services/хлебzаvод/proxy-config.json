@@ -1,0 +1,4 @@
+[
+  { "from": ":81", "to": "http://zavod:80" },
+  { "from": ":82", "to": "http://magaz:80" }
+]
