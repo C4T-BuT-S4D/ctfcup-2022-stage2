@@ -8,6 +8,9 @@ services:
       - authdata:/usr/local/tokenz/data
     networks:
       - services
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 2
   zavod:
     build:
       context: ./apiz
@@ -30,6 +33,9 @@ services:
         condition: service_started
       db:
         condition: service_healthy
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 2
   magaz:
     build:
       context: ./apiz
@@ -51,8 +57,12 @@ services:
         condition: service_started
       db:
         condition: service_healthy
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 2
   db:
     image: postgres:15.1
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: password
       ZAVOD_USER: zavod
