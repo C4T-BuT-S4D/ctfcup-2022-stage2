@@ -2,6 +2,7 @@ module main
 
 import auth
 import db
+import graceful
 import log
 import os
 import vweb
@@ -18,6 +19,8 @@ mut:
 }
 
 fn main() {
+	graceful.register()!
+
 	store := db.open(os.getenv('DB_HOST'), os.getenv('DB_USER'), os.getenv('DB_PASSWORD')) or {
 		panic('failed to connect to db: ${err}')
 	}
