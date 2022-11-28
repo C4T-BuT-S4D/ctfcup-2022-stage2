@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::service::{
-    check_credentials, get_user_paths, insert_user, read_file, reindex_user_files,
+    check_credentials, create_unix_user, get_user_paths, insert_user, read_file, reindex_user_files,
 };
 
 #[derive(Deserialize)]
@@ -72,9 +72,13 @@ pub async fn register(req: web::Json<AuthCredentials>, db_pool: web::Data<Pool>)
         Err(e) => return error(e),
     };
 
-    match insert_user(&client, &creds.username, &creds.password).await {
+    if let Err(e) = insert_user(&client, &creds.username, &creds.password).await {
+        return error(e);
+    }
+
+    match web::block(move || create_unix_user(&creds.username, &creds.password)).await {
         Ok(_) => HttpResponse::Ok().json("registered"),
-        Err(err) => error(err),
+        Err(e) => error(e),
     }
 }
 

@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::path::Path;
+use std::process;
 use std::sync::Mutex;
 
 use async_process::Command;
@@ -72,18 +73,22 @@ pub async fn insert_user(
     )
     .await?;
 
-    let lock = CREATE_MUTEX.lock().unwrap();
+    Ok(())
+}
 
-    Command::new("sudo")
+pub fn create_unix_user(user: &String, password: &String) -> Result<(), SimpleError> {
+    let _lock = match CREATE_MUTEX.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    process::Command::new("sudo")
         .arg(ADD_USER_SCRIPT)
         .arg(user)
         .arg(password)
         .output()
-        .await?;
-
-    drop(lock);
-
-    Ok(())
+        .map(|_| ())
+        .map_err(|e| SimpleError::new(e.to_string()).into())
 }
 
 fn home_dir(u: &String) -> String {

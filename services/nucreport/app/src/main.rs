@@ -1,6 +1,6 @@
 use ::config::Config;
-use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-use actix_web::{App, cookie, HttpServer, web};
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_web::{cookie, web, App, HttpServer};
 use deadpool_postgres::tokio_postgres::NoTls;
 use dotenv::dotenv;
 use serde::Deserialize;
@@ -47,8 +47,8 @@ async fn main() -> std::io::Result<()> {
             .service(reindex)
             .service(get_indexed_files)
     })
-        .workers(10)
-        .bind(("0.0.0.0", 8080))?
-        .run()
-        .await
+    .workers(4)
+    .bind(("0.0.0.0", 8080))?
+    .run()
+    .await
 }
