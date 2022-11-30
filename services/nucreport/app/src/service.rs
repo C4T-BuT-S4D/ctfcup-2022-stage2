@@ -20,7 +20,7 @@ pub struct PathInfo {
 }
 
 // 50kb
-const MAX_READ_BYTES: u64 = 50 << (10 * 1);
+const MAX_READ_BYTES: u64 = 50 << 10;
 const ADD_USER_SCRIPT: &str = "/usr/sbin/addnewuser.sh";
 const READ_FILE_SCRIPT: &str = "/usr/sbin/readfile.sh";
 
@@ -38,7 +38,7 @@ pub async fn check_credentials(
         None => Err(SimpleError::new("Invalid credentials").into()),
         Some(row) => {
             let user_id: i32 = row.get(0);
-            return Ok(user_id);
+            Ok(user_id)
         }
     }
 }
@@ -88,7 +88,7 @@ pub fn create_unix_user(user: &String, password: &String) -> Result<(), SimpleEr
         .arg(password)
         .output()
         .map(|_| ())
-        .map_err(|e| SimpleError::new(e.to_string()).into())
+        .map_err(|e| SimpleError::new(e.to_string()))
 }
 
 fn home_dir(u: &String) -> String {
@@ -121,7 +121,7 @@ pub async fn read_file(
         return safe_read_file(path).await;
     }
 
-    return Err(SimpleError::new("Unauthorized").into());
+    Err(SimpleError::new("Unauthorized").into())
 }
 
 pub async fn reindex_user_files(cli: &Client, user: &String) -> Result<(), Box<dyn Error>> {
@@ -156,14 +156,14 @@ pub async fn get_user_paths(cli: &Client, user: &String) -> Result<Vec<PathInfo>
         });
     }
 
-    return Ok(res);
+    Ok(res)
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.starts_with("."))
+        .map(|s| s.starts_with('.'))
         .unwrap_or(false)
 }
 
@@ -191,7 +191,7 @@ fn index_dir(user: &String) -> Vec<String> {
             }
         }
     }
-    return vec;
+    vec
 }
 
 async fn read_by_file_token(
@@ -216,8 +216,8 @@ async fn safe_read_file(path: &str) -> Result<String, Box<dyn Error>> {
         .output()
         .await?;
 
-    return String::from_utf8(res.stdout)
-        .map_err(|_| SimpleError::new("failed to decode utf-8").into());
+    String::from_utf8(res.stdout)
+        .map_err(|_| SimpleError::new("failed to decode utf-8").into())
 }
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

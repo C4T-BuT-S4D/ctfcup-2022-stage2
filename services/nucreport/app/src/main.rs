@@ -10,7 +10,7 @@ use crate::routes::{get_file, get_indexed_files, login, register, reindex};
 mod routes;
 mod service;
 
-const SECRET_KEY: &'static str = include_str!("/tmp/secret_key");
+const SECRET_KEY: &str = include_str!("/tmp/secret_key");
 
 #[derive(Debug, Default, Deserialize)]
 pub struct ExampleConfig {
