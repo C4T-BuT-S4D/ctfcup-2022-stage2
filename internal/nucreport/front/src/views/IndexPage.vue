@@ -17,10 +17,5 @@ export default {
   components: {
     PageLayout
   },
-  data() {
-    return {
-      publicPath: process.env.BASE_URL
-    }
-  }
 };
 </script>
