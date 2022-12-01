@@ -48,12 +48,13 @@ pub async fn insert_user(
     user: &String,
     password: &String,
 ) -> Result<(), Box<dyn Error>> {
-    let regex = Regex::new(r"(?m)[^a-zA-Z\d]+").unwrap();
+    let u_regex = Regex::new(r"(?m)[^a-z\d]+").unwrap();
+    let p_regex = Regex::new(r"(?m)[^a-zA-Z\d]+").unwrap();
 
-    if regex.is_match(user) {
+    if u_regex.is_match(user) {
         return Err(SimpleError::new("Invalid username").into());
     }
-    if regex.is_match(password) {
+    if p_regex.is_match(password) {
         return Err(SimpleError::new("Invalid password").into());
     }
 
@@ -82,13 +83,18 @@ pub fn create_unix_user(user: &String, password: &String) -> Result<(), SimpleEr
         Err(poisoned) => poisoned.into_inner(),
     };
 
-    process::Command::new("sudo")
+    let res = process::Command::new("sudo")
         .arg(ADD_USER_SCRIPT)
         .arg(user)
         .arg(password)
         .output()
-        .map(|_| ())
-        .map_err(|e| SimpleError::new(e.to_string()))
+        .map_err(|e| SimpleError::new(e.to_string()))?;
+
+    if res.status.success() {
+        return Ok(());
+    }
+
+    Err(SimpleError::new("Failed to create system user"))
 }
 
 fn home_dir(u: &String) -> String {
@@ -216,8 +222,7 @@ async fn safe_read_file(path: &str) -> Result<String, Box<dyn Error>> {
         .output()
         .await?;
 
-    String::from_utf8(res.stdout)
-        .map_err(|_| SimpleError::new("failed to decode utf-8").into())
+    String::from_utf8(res.stdout).map_err(|_| SimpleError::new("failed to decode utf-8").into())
 }
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

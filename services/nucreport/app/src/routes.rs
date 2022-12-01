@@ -76,7 +76,13 @@ pub async fn register(req: web::Json<AuthCredentials>, db_pool: web::Data<Pool>)
         return error(e);
     }
 
-    match web::block(move || create_unix_user(&creds.username, &creds.password)).await {
+    let exec_res =
+        match web::block(move || create_unix_user(&creds.username, &creds.password)).await {
+            Ok(cli) => cli,
+            Err(e) => return error(e),
+        };
+
+    match exec_res {
         Ok(_) => HttpResponse::Ok().json("registered"),
         Err(e) => error(e),
     }
