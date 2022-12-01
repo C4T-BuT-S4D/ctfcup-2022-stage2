@@ -1,0 +1,10 @@
+diff --git a/services/great_mettender/Dockerfile b/services/great_mettender/Dockerfile
+index 04805df..5956652 100644
+--- a/services/great_mettender/Dockerfile
++++ b/services/great_mettender/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM golang:1.18.3-alpine
++FROM golang:1.18.4-alpine
+ 
+ ENV INTERFUCK_PATH /interfuck
+ 
