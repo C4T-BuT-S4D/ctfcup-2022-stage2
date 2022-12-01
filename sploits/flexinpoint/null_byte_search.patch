@@ -1,0 +1,21 @@
+diff --git a/services/flexinpoint/server/server.cpp b/services/flexinpoint/server/server.cpp
+index 8184770..b89bd19 100644
+--- a/services/flexinpoint/server/server.cpp
++++ b/services/flexinpoint/server/server.cpp
+@@ -5,6 +5,7 @@
+ #include <limits>
+ #include <optional>
+ #include <random>
++#include <cstring>
+ 
+ namespace flexinpoint {
+ 
+@@ -304,7 +305,7 @@ grpc::Status FlexinPointService::FindPath(
+       return {grpc::StatusCode::INVALID_ARGUMENT,
+               "invalid attributes structure"};
+     }
+-    if (attributes.AsVector()[i].AsVector()[0].AsString().str() == kName) {
++    if (std::strcmp(attributes.AsVector()[i].AsVector()[0].AsString().str().c_str(), "_name")) {
+       return {grpc::StatusCode::INVALID_ARGUMENT, "can't search by name"};
+     } else if (attributes.AsVector()[i].AsVector()[0].AsString().str() ==
+                kDescription) {
