@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo chown -R root:users /users
+sudo chown root:users /users
 sudo chmod 0755 /users
 
 service ssh start
