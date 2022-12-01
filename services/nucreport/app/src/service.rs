@@ -1,8 +1,8 @@
 use std::error::Error;
 use std::path::Path;
+use std::process;
 use std::sync::Mutex;
 
-use actix_web::web;
 use async_process::Command;
 use deadpool_postgres::Client;
 use rand::Rng;
@@ -20,7 +20,7 @@ pub struct PathInfo {
 }
 
 // 50kb
-const MAX_READ_BYTES: u64 = 50 << (10 * 1);
+const MAX_READ_BYTES: u64 = 50 << 10;
 const ADD_USER_SCRIPT: &str = "/usr/sbin/addnewuser.sh";
 const READ_FILE_SCRIPT: &str = "/usr/sbin/readfile.sh";
 
@@ -38,7 +38,7 @@ pub async fn check_credentials(
         None => Err(SimpleError::new("Invalid credentials").into()),
         Some(row) => {
             let user_id: i32 = row.get(0);
-            return Ok(user_id);
+            Ok(user_id)
         }
     }
 }
@@ -48,12 +48,13 @@ pub async fn insert_user(
     user: &String,
     password: &String,
 ) -> Result<(), Box<dyn Error>> {
-    let regex = Regex::new(r"(?m)[^a-zA-Z\d]+").unwrap();
+    let u_regex = Regex::new(r"(?m)[^a-z\d]+").unwrap();
+    let p_regex = Regex::new(r"(?m)[^a-zA-Z\d]+").unwrap();
 
-    if regex.is_match(user) {
+    if u_regex.is_match(user) {
         return Err(SimpleError::new("Invalid username").into());
     }
-    if regex.is_match(password) {
+    if p_regex.is_match(password) {
         return Err(SimpleError::new("Invalid password").into());
     }
 
@@ -73,18 +74,27 @@ pub async fn insert_user(
     )
     .await?;
 
-    let lock = CREATE_MUTEX.lock().unwrap();
+    Ok(())
+}
 
-    Command::new("sudo")
+pub fn create_unix_user(user: &String, password: &String) -> Result<(), SimpleError> {
+    let _lock = match CREATE_MUTEX.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    let res = process::Command::new("sudo")
         .arg(ADD_USER_SCRIPT)
         .arg(user)
         .arg(password)
         .output()
-        .await?;
+        .map_err(|e| SimpleError::new(e.to_string()))?;
 
-    drop(lock);
+    if res.status.success() {
+        return Ok(());
+    }
 
-    Ok(())
+    Err(SimpleError::new("Failed to create system user"))
 }
 
 fn home_dir(u: &String) -> String {
@@ -117,7 +127,7 @@ pub async fn read_file(
         return safe_read_file(path).await;
     }
 
-    return Err(SimpleError::new("Unauthorized").into());
+    Err(SimpleError::new("Unauthorized").into())
 }
 
 pub async fn reindex_user_files(cli: &Client, user: &String) -> Result<(), Box<dyn Error>> {
@@ -152,14 +162,14 @@ pub async fn get_user_paths(cli: &Client, user: &String) -> Result<Vec<PathInfo>
         });
     }
 
-    return Ok(res);
+    Ok(res)
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.starts_with("."))
+        .map(|s| s.starts_with('.'))
         .unwrap_or(false)
 }
 
@@ -187,7 +197,7 @@ fn index_dir(user: &String) -> Vec<String> {
             }
         }
     }
-    return vec;
+    vec
 }
 
 async fn read_by_file_token(
@@ -212,8 +222,7 @@ async fn safe_read_file(path: &str) -> Result<String, Box<dyn Error>> {
         .output()
         .await?;
 
-    return String::from_utf8(res.stdout)
-        .map_err(|_| SimpleError::new("failed to decode utf-8").into());
+    String::from_utf8(res.stdout).map_err(|_| SimpleError::new("failed to decode utf-8").into())
 }
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

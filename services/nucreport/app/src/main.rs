@@ -1,5 +1,3 @@
-use std::sync::Mutex;
-
 use ::config::Config;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, web, App, HttpServer};
@@ -12,7 +10,7 @@ use crate::routes::{get_file, get_indexed_files, login, register, reindex};
 mod routes;
 mod service;
 
-const SECRET_KEY: &'static str = include_str!("/tmp/secret_key");
+const SECRET_KEY: &str = include_str!("/tmp/secret_key");
 
 #[derive(Debug, Default, Deserialize)]
 pub struct ExampleConfig {
@@ -49,7 +47,7 @@ async fn main() -> std::io::Result<()> {
             .service(reindex)
             .service(get_indexed_files)
     })
-        .workers(10)
+    .workers(4)
     .bind(("0.0.0.0", 8080))?
     .run()
     .await
