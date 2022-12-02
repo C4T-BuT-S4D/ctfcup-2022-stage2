@@ -31,7 +31,7 @@ class Checker(HTMLChecker):
       self.cquit(Status.DOWN, 'Connection error', 'Got requests connection error')
 
   def random_creds(self):
-    username = rnd_string(MAX_USERNAME_LEN, alphabet=string.ascii_lowercase + string.digits)
+    username = rnd_username(MAX_USERNAME_LEN)[:MAX_USERNAME_LEN]
     password = rnd_password(MAX_PASSWORD_LEN)
     return username, password
 

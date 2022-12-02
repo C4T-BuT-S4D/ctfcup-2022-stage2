@@ -7,7 +7,7 @@ services:
     volumes:
       - authdata:/usr/local/tokenz/data
     pids_limit: 256
-    mem_limit: 256m
+    mem_limit: 512m
     cpus: 2
   zavod:
     build:
@@ -28,7 +28,7 @@ services:
         condition: service_healthy
     pids_limit: 256
     mem_limit: 256m
-    cpus: 2
+    cpus: 1
   magaz:
     build:
       context: ./apiz
@@ -47,7 +47,7 @@ services:
         condition: service_healthy
     pids_limit: 256
     mem_limit: 256m
-    cpus: 2
+    cpus: 1
   proxyz:
     build: ./proxyz
     restart: unless-stopped
@@ -60,7 +60,7 @@ services:
       - zavod
       - magaz
     pids_limit: 256
-    mem_limit: 256m
+    mem_limit: 512m
     cpus: 2
   db:
     image: postgres:15.1

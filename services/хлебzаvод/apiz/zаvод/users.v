@@ -45,12 +45,12 @@ fn (mut app App) register_validate(username string, password string) !bool {
 	} else if username.len > 15 || password.len > 15 {
 		app.error(.unprocessable_entity, 'Ник и пароль не должны быть длиннее 15-ти символов')
 	} else {
-		mut username_re := regex.regex_opt(r'^[a-z\d]{3,15}$') or {
+		mut username_re := regex.regex_opt(r'^\w{3,15}$') or {
 			return error('compiling username regex: ${err}')
 		}
 
 		if !username_re.matches_string(username) {
-			app.error(.unprocessable_entity, 'Ник может состоять только из строчных букв латинского алфавита и цифр')
+			app.error(.unprocessable_entity, 'Ник может состоять только из букв латинского алфавита и цифр')
 			return false
 		}
 		return true
