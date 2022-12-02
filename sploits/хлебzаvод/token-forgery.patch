@@ -1,0 +1,13 @@
+diff --git "a/services/хлебzаvод/apiz/zаvод/session.v" "b/services/хлебzаvод/apiz/zаvод/session.v"
+index 12bf282..c9796ce 100644
+--- "a/services/хлебzаvод/apiz/zаvод/session.v"
++++ "b/services/хлебzаvод/apiz/zаvод/session.v"
+@@ -35,7 +35,7 @@ pub fn (mut app App) before_request() {
+                        return
+                }
+ 
+-               app.error(.service_unavailable, 'failed to auth: ${err}')
++               app.internal_error('failed to auth: ${err}')
+                return
+        }
+ 
