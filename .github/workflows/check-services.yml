@@ -36,8 +36,6 @@ jobs:
       matrix:
         service:
         - хлебzаvод
-        - nucreport
-        - great_mettender
 
     steps:
     - uses: actions/checkout@v2
