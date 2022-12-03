@@ -8,7 +8,7 @@ RUN apt update && \
     apt install -y build-essential libpq-dev curl unzip
 
 WORKDIR /
-RUN curl https://github.com/vlang/v/releases/download/weekly.2022.46/v_linux.zip -L -O && \
+RUN curl https://github.com/vlang/v/releases/download/weekly.2022.48/v_linux.zip -L -O && \
   unzip v_linux.zip
 
 WORKDIR /build

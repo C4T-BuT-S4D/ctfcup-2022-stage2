@@ -4,7 +4,7 @@ RUN apk update && \
     apk add curl xz
 
 WORKDIR /zig
-RUN curl https://ziglang.org/builds/zig-linux-x86_64-0.11.0-dev.231+476b94680.tar.xz -o zig-linux-x86_64.tar.xz && \
+RUN curl https://ziglang.org/builds/zig-linux-x86_64-0.11.0-dev.449+665eba93c.tar.xz -o zig-linux-x86_64.tar.xz && \
   tar xf zig-linux-x86_64.tar.xz --strip-components 1
 
 WORKDIR /build
