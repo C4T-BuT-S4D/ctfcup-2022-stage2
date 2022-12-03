@@ -35,6 +35,9 @@ jobs:
     strategy:
       matrix:
         service:
+        - flexinpoint
+        - great_mettender
+        - nucreport
         - хлебzаvод
 
     steps:
