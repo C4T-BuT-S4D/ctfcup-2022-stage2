@@ -74,13 +74,13 @@ class Checker(HTMLChecker):
     data = json.loads(flag_id)
 
     username, password = data["username"], data["password"]
-    self.zcm.auth(session, "login", username, password)
+    self.zcm.auth(session, "login", username, password, status=Status.CORRUPT)
 
     bread = data["bread"]
     order_id, order_link = data["order_id"], data["order_link"]
-    self.zcm.ensure_orders(session, [(bread, order_id)])
+    self.zcm.ensure_orders(session, [(bread, order_id)], status=Status.CORRUPT)
 
-    self.mcm.ensure_recipient(get_initialized_session(), order_link, flag)
+    self.mcm.ensure_recipient(get_initialized_session(), order_link, flag, status=Status.CORRUPT)
     self.cquit(Status.OK)
 
 if __name__ == '__main__':
