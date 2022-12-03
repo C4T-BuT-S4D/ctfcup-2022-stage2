@@ -15,7 +15,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
   create table orders (
     id bigint primary key default ('x'||right(gen_random_bytes(4)::text, 8))::bit(32)::bigint,
-    username text not null references users,
+    username text not null references users on delete cascade,
     bread text not null,
     recipient text not null,
     created_at timestamp not null default now()
@@ -24,7 +24,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   create function clean_old() returns trigger as \$\$
     begin
       delete from users where created_at < now() - interval '30 mins';
-      delete from orders where created_at < now() - interval '30 mins';
       return null;
     end;
   \$\$ language plpgsql;
