@@ -415,7 +415,7 @@ fn Parser(ReaderType: anytype) type {
                     break;
                 }
             }
-            return Event{ .body = body_list.toOwnedSlice() };
+            return Event{ .body = try body_list.toOwnedSlice() };
         }
 
         fn assertLE(line: []const u8) ParseError![]const u8 {
