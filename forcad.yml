@@ -1,0 +1,52 @@
+admin:
+  username: 'forcad'
+  password: '<redacted>'
+
+game:
+  mode: classic
+  round_time: 60
+  start_time: 2022-12-10 10:00:00
+  timezone: Europe/Moscow
+
+  default_score: 2500
+  flag_lifetime: 10
+  game_hardness: 13.0
+  inflation: true
+
+tasks:
+  - checker: nucreport/checker.py
+    checker_timeout: 15
+    checker_type: pfr
+    gets: 1
+    name: nucreport
+    places: 1
+    puts: 1
+
+  - checker: "хлебzаvод/checker.py"
+    checker_timeout: 15
+    checker_type: pfr
+    gets: 1
+    name: "хлебzаvод"
+    places: 1
+    puts: 1
+
+  - checker: flexinpoint/checker.py
+    checker_timeout: 10
+    checker_type: pfr
+    gets: 3
+    name: flexinpoint
+    places: 1
+    puts: 3
+    default_score: 3000
+
+  - checker: great_mettender/checker.py
+    checker_timeout: 10
+    checker_type: pfr
+    gets: 5
+    name: great_mettender
+    places: 1
+    puts: 2
+    default_score: 3500
+
+# TODO
+# teams:

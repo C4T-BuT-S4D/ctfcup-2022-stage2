@@ -1,19 +1,39 @@
-# ad-boilerplate
+[![check-services](https://github.com/C4T-BuT-S4D/ctfcup-2022-stage2/actions/workflows/check-services.yml/badge.svg?branch=master)](https://github.com/C4T-BuT-S4D/ctfcup-2022-stage2/actions/workflows/check-services.yml)
 
-[![check-services](https://github.com/C4T-BuT-S4D/ad-boilerplate/actions/workflows/check-services.yml/badge.svg?branch=master&event=push)](https://github.com/C4T-BuT-S4D/ad-boilerplate/actions/workflows/check-services.yml)
+# CTF Cup 2022 Stage 2
 
-Development workflow:
+The contest was held on December 10, 2022.
 
-1) Create branch named `$SERVICE`.
-2) Write your code in `services/$SERVICE`, `checkers/$SERVICE`, `sploits/$SERVICE` and `internal/$SERVICE` (if needed).
-3) Validate your service with `SERVICE=$SERVICE ./check.py validate`.
-4) Up your service with `SERVICE=$SERVICE ./check.py up`.
-5) Check your service with `SERVICE=$SERVICE RUNS=200 ./check.py check`.
-6) Down your service with `SERVICE=$SERVICE ./check.py down`.
-7) Add your service to `.github/workflows/check-services.yml`, line 38.
-8) Push your code and create pull request to master branch.
+Repository contains source code of services, checkers and sploits.
 
-Don't forget to:
-1) Add your checker requirements to `checkers/requirements.txt`.
-2) Use `dedcleaner` container to delete old files if needed. Example can be found in `services/example/docker-compose.yml`.
-3) Add info about your checker to `Checker` class. Example can be found in `checkers/example/checker.py`, line 11.
+
+## Results
+
+![Top](scoreboard/top.png)
+
+[Full scoreboard](scoreboard/full.png)
+
+
+## Services
+
+| Service | Language | Checker | Sploits | Authors |
+|---------|----------|---------|---------|---------|
+| **[flexinpoint](services/flexinpoint/)** | C++ | [Checker](checkers/flexinpoint/) | [Sploits](sploits/flexinpoint/) | [@b1r1b1r1](https://github.com/b1r1b1r1) |
+| **[great_mettender](services/great_mettender/)** | Go | [Checker](checkers/great_mettender/) | [Sploits](sploits/great_mettender/) | [@pomo-mondreganto](https://github.com/pomo-mondreganto) |
+| **[nucreport](services/nucreport/)** | Rust | [Checker](checkers/nucreport/) | [Sploits](sploits/nucreport/) | [@jnovikov](https://github.com/jnovikov) |
+| **[хлебzаvод](services/хлебzаvод/)** | Zig & V | [Checker](checkers/хлебzаvод/) | [Sploits](sploits/хлебzаvод/) | [@renbou](https://github.com/renbou) |
+
+## Infrastructure
+
+- DevOps: [@pomo_mondreganto](https://github.com/pomo-mondreganto)
+- Checksystem: [ForcAD](https://github.com/pomo-mondreganto/ForcAD)
+- Checksystem config: [forcad.yml](./forcad.yml)
+
+
+## Writeups
+
+- [flexinpoint](/sploits/flexinpoint/)
+- [great_mettender](/sploits/great_mettender/)
+- [nucreport](/sploits/nucreport/)
+- [хлебzаvод](/sploits/хлебzаvод/)
+
