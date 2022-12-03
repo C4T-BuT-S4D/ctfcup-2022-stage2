@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>МагаZ</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@@0.9.4/css/bulma.min.css">
+    <style>
+      body {
+        background-image: url("/public/img/wheat-bg.png");
+        background-repeat: repeat;
+      }
+    </style>
+  </head>
+  <body style="width: 100vw; height: 100vh; overflow: hidden">
+    <header>
+      <nav class="pt-4 px-4 pb-2" style="min-height: 3.25rem">
+        <div class="navbar-brand p-3 has-background-light" style="border-radius: 3px; display: inline-block">
+          <h1 class="title is-2 has-text-weight-semibold">МагаZ</h1>
+        </div>
+      </nav>
+    </header>
+    <div class="section">
+      <div class="container is-flex is-justify-content-center">
+        <div class="box has-background-light has-text-centered" style="width: 50%; min-height: 10rem;">
+          @if app.error != ''
+          <h2 class="title is-4 has-text-danger-dark">${app.error}</h2>
+          @else
+          <figure class="image is-3by2">
+            <img src="/public/img/${order.bread}.jpg" style="border-radius: 3px;" />
+          </figure>
+          <div class="mt-5 content">
+            <h3>${order.recipient}, Ваш свежеиспечённый хлеб от ${capsule.timestamp.get_fmt_date_str(.dot, .ddmmyy)}!</h3>
+          </div>
+          @end
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

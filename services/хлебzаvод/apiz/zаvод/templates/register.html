@@ -1,0 +1,32 @@
+@include 'components/head.html'
+<div class="section">
+  <h2 class="subtitle is-3">Регистрация</h2>
+  <div class="container" style="max-width: 40rem">
+    <div class="box">
+      <form action="/register" method="post">
+        <div class="field">
+          <label class="label">Ник</label>
+          <div class="control">
+            <input class="input" name="username" type="text" minlength="3" maxlength="15" placeholder="например, Саня">
+          </div>
+        </div>
+      
+        <div class="field">
+          <label class="label">Пароль</label>
+          <div class="control">
+            <input class="input" name="password" type="password" minlength="5" maxlength="15" placeholder="********">
+          </div>
+        </div>
+
+        @if app.error != ''
+          <div class="field">
+            <p class="help is-danger">${app.error}</p>
+          </div>
+        @end
+      
+        <button class="button is-light">Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+</div>
+@include 'components/footer.html'

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ХлебZаVод</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@@0.9.4/css/bulma.min.css">
+  </head>
+  <body style="max-width: 100rem" class="mx-auto">
+    <header>
+      <nav class="navbar pt-4 px-4 pb-2">
+        <div class="navbar-brand">
+          <a href="/"><h1 class="title is-2 has-text-weight-semibold">ХлебZаVод</h1></a>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item">
+            @if app.session.username != ''
+            <a class="button is-success" href="/orders">Мои заказы</a>
+            @else
+            <div class="buttons">
+              <a class="button is-dark" href="/register"><strong>Регистрация</strong></a>
+              <a class="button is-light" href="/login">Войти</a>
+            </div>
+            @end
+          </div>
+        </div>
+      </nav>
+    </header>

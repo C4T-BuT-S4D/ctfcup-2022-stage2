@@ -1,0 +1,85 @@
+version: "2.4"
+
+services:
+  tokenz:
+    build: ./tokenz
+    restart: unless-stopped
+    volumes:
+      - authdata:/usr/local/tokenz/data
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 2
+  zavod:
+    build:
+      context: ./apiz
+      args:
+        APP: zаvод
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: zavod
+      DB_PASSWORD: zavod-password
+      AUTH_HOST: tokenz
+      MAGAZ_PORT: "41385"
+    depends_on:
+      tokenz:
+        condition: service_started
+      db:
+        condition: service_healthy
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 1
+  magaz:
+    build:
+      context: ./apiz
+      args:
+        APP: магаz
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: magaz
+      DB_PASSWORD: magaz-password
+      AUTH_HOST: tokenz
+    depends_on:
+      tokenz:
+        condition: service_started
+      db:
+        condition: service_healthy
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 1
+  proxyz:
+    build: ./proxyz
+    restart: unless-stopped
+    volumes:
+      - ./proxy-config.json:/usr/local/proxyz/config.json:ro
+    ports:
+      - 41384:81
+      - 41385:82
+    depends_on:
+      - zavod
+      - magaz
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 2
+  db:
+    image: postgres:15.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: password
+      ZAVOD_USER: zavod
+      ZAVOD_PASSWORD: zavod-password
+      MAGAZ_USER: magaz
+      MAGAZ_PASSWORD: magaz-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  authdata:

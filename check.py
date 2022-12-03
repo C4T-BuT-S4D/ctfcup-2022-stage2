@@ -38,7 +38,7 @@ CONTAINER_ALLOWED_OPTIONS = CONTAINER_REQUIRED_OPTIONS + [
     'build', 'image',
     'ports', 'volumes',
     'environment', 'env_file',
-    'depends_on',
+    'healthcheck', 'depends_on',
     'sysctls', 'privileged', 'security_opt',
 ]
 SERVICE_REQUIRED_OPTIONS = ['pids_limit', 'mem_limit', 'cpus']
@@ -424,7 +424,7 @@ class StructureValidator(BaseValidator):
 
             for service in services:
                 for database in databases:
-                    self._error(
+                    self._warning(
                         service in dependencies and database in dependencies[service],
                         f'service {service} may need to depends_on database {database}')
 

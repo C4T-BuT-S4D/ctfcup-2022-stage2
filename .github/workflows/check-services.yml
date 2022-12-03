@@ -35,9 +35,7 @@ jobs:
     strategy:
       matrix:
         service:
-        - flexinpoint
-        - nucreport
-        - great_mettender
+        - хлебzаvод
 
     steps:
     - uses: actions/checkout@v2
