@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	sleepDuration   = time.Millisecond * 5
+	sleepDuration   = time.Millisecond * 10
 	shutdownTimeout = time.Millisecond * 500
 )
 
