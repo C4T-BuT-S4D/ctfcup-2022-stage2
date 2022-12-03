@@ -1,7 +1,6 @@
 import io
 import tempfile
 
-import re
 import requests
 import paramiko
 from checklib import *
@@ -13,7 +12,7 @@ SSH_PORT = 4222
 class CheckMachine:
     @property
     def url(self):
-        return f'http://{self.c.host}:{self.web_port}'
+        return f'http://{self.c.host}:{self.web_port}/api'
 
     def __init__(self, checker: BaseChecker):
         self.c = checker
@@ -26,7 +25,7 @@ class CheckMachine:
 
     def login(self, session: requests.Session, username: str, password: str, status: Status):
         resp = session.post(self.url + '/login', json={'username': username, 'password': password})
-        self.c.assert_eq(resp.status_code, 200, 'Failed to login using web')
+        self.c.assert_eq(resp.status_code, 200, 'Failed to login using web', status=status)
 
     def reindex_files(self, session: requests.Session, status=status.Status.MUMBLE):
         resp = session.post(self.url + '/reindex')
@@ -35,7 +34,7 @@ class CheckMachine:
     def list_user_files_web(self, session: requests.Session):
         resp = session.get(self.url + '/files')
         self.c.assert_eq(resp.status_code, 200, 'Failed to get user indexed files', status=status.Status.MUMBLE)
-        return resp.json()
+        return get_json(resp, 'Failed to get user indexed files: invalid JSON returned')
 
     def get_file_web(self, session: requests.Session, path, token, status=status.Status.MUMBLE):
         resp = session.get(self.url + '/file', params={'path': path, 'token': token})
