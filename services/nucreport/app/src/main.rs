@@ -21,12 +21,12 @@ pub struct ExampleConfig {
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
-    let config_ = Config::builder()
+    let config = Config::builder()
         .add_source(::config::Environment::default())
         .build()
         .unwrap();
 
-    let config: ExampleConfig = config_.try_deserialize().unwrap();
+    let config: ExampleConfig = config.try_deserialize().unwrap();
 
     let pool = config.pg.create_pool(None, NoTls).unwrap();
 

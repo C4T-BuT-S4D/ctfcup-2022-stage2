@@ -1,5 +1,7 @@
+use std::fmt::Display;
+
 use actix_session::Session;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, HttpResponseBuilder, Responder};
 use deadpool_postgres::{Client, Pool};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -26,12 +28,40 @@ pub struct UserData {
     id: i32,
 }
 
-fn error<T: std::fmt::Display>(e: T) -> HttpResponse {
-    HttpResponse::PreconditionFailed().json(json!({ "error": format!("{}", e) }))
+#[derive(Debug)]
+pub struct AppError {
+    status: actix_web::http::StatusCode,
+    message: String,
 }
 
-fn error_unauthenticated<T: std::fmt::Display>(e: T) -> HttpResponse {
-    HttpResponse::Unauthorized().json(json!({ "error": format!("{}", e) }))
+impl Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+fn error<T: Display>(e: T) -> AppError {
+    AppError {
+        status: actix_web::http::StatusCode::PRECONDITION_FAILED,
+        message: e.to_string(),
+    }
+}
+
+fn error_unauthenticated<T: Display>(e: T) -> AppError {
+    AppError {
+        status: actix_web::http::StatusCode::UNAUTHORIZED,
+        message: e.to_string(),
+    }
+}
+
+impl actix_web::ResponseError for AppError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        self.status
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        HttpResponseBuilder::new(self.status_code()).json(json!({"error": self.message}))
+    }
 }
 
 #[post("/api/login")]
@@ -39,53 +69,41 @@ pub async fn login(
     req: web::Json<AuthCredentials>,
     session: Session,
     db_pool: web::Data<Pool>,
-) -> impl Responder {
+) -> Result<impl Responder, AppError> {
     let creds = req.into_inner();
 
-    let client: Client = match db_pool.get().await {
-        Ok(cli) => cli,
-        Err(e) => return error(e),
+    let client: Client = db_pool.get().await.map_err(error)?;
+
+    let user_id = check_credentials(&client, &creds.username, &creds.password)
+        .await
+        .map_err(error)?;
+    let udata = UserData {
+        username: creds.username,
+        id: user_id,
     };
 
-    match check_credentials(&client, &creds.username, &creds.password).await {
-        Ok(user_id) => {
-            let udata = UserData {
-                username: creds.username,
-                id: user_id,
-            };
-
-            match session.insert("user", &udata) {
-                Ok(_) => HttpResponse::Ok().json(udata),
-                Err(e) => error(e),
-            }
-        }
-        Err(e) => error(e),
-    }
+    session.insert("user", &udata).map_err(error)?;
+    Ok(HttpResponse::Ok().json(udata))
 }
 
 #[post("/api/register")]
-pub async fn register(req: web::Json<AuthCredentials>, db_pool: web::Data<Pool>) -> impl Responder {
+pub async fn register(
+    req: web::Json<AuthCredentials>,
+    db_pool: web::Data<Pool>,
+) -> Result<impl Responder, AppError> {
     let creds = req.into_inner();
 
-    let client: Client = match db_pool.get().await {
-        Ok(cli) => cli,
-        Err(e) => return error(e),
-    };
+    let client: Client = db_pool.get().await.map_err(error)?;
 
-    if let Err(e) = insert_user(&client, &creds.username, &creds.password).await {
-        return error(e);
-    }
+    insert_user(&client, &creds.username, &creds.password)
+        .await
+        .map_err(error)?;
 
-    let exec_res =
-        match web::block(move || create_unix_user(&creds.username, &creds.password)).await {
-            Ok(cli) => cli,
-            Err(e) => return error(e),
-        };
+    create_unix_user(&creds.username, &creds.password)
+        .await
+        .map_err(error)?;
 
-    match exec_res {
-        Ok(_) => HttpResponse::Ok().json("registered"),
-        Err(e) => error(e),
-    }
+    Ok(HttpResponse::Ok().json("registered"))
 }
 
 #[get("/api/file")]
@@ -93,70 +111,49 @@ pub async fn get_file(
     read_query: web::Query<ReadFileQuery>,
     session: Session,
     db_pool: web::Data<Pool>,
-) -> impl Responder {
-    let user = match session.get("user") {
-        Err(e) => return error_unauthenticated(e),
-        Ok(value) => value,
-    };
-    if user.is_none() {
-        return error_unauthenticated("No user saved in session");
-    }
-
-    let user: UserData = user.unwrap();
-
-    let client: Client = match db_pool.get().await {
-        Ok(cli) => cli,
-        Err(e) => return error(e),
+) -> Result<impl Responder, AppError> {
+    let Some(user) = session.get::<UserData>("user").map_err(error_unauthenticated)? else {
+        return Err(error_unauthenticated("No user saved in session"));
     };
 
-    match read_file(&client, &user.username, &read_query.path, &read_query.token).await {
-        Ok(content) => HttpResponse::Ok().body(content),
-        Err(e) => error(e),
-    }
+    let client: Client = db_pool.get().await.map_err(error)?;
+
+    let content = read_file(&client, &user.username, &read_query.path, &read_query.token)
+        .await
+        .map_err(error)?;
+    Ok(HttpResponse::Ok().body(content))
 }
 
 #[get("/api/files")]
-pub async fn get_indexed_files(session: Session, db_pool: web::Data<Pool>) -> impl Responder {
-    let user = match session.get("user") {
-        Err(e) => return error_unauthenticated(e),
-        Ok(value) => value,
-    };
-    if user.is_none() {
-        return error_unauthenticated("No user saved in session");
-    }
-
-    let user: UserData = user.unwrap();
-
-    let client: Client = match db_pool.get().await {
-        Ok(cli) => cli,
-        Err(e) => return error(e),
+pub async fn get_indexed_files(
+    session: Session,
+    db_pool: web::Data<Pool>,
+) -> Result<impl Responder, AppError> {
+    let Some(user) = session.get::<UserData>("user").map_err(error_unauthenticated)? else {
+        return Err(error_unauthenticated("No user saved in session"));
     };
 
-    match get_user_paths(&client, &user.username).await {
-        Ok(paths) => HttpResponse::Ok().json(paths),
-        Err(e) => error(e),
-    }
+    let client: Client = db_pool.get().await.map_err(error)?;
+
+    let paths = get_user_paths(&client, &user.username)
+        .await
+        .map_err(error)?;
+    Ok(HttpResponse::Ok().json(paths))
 }
 
 #[post("/api/reindex")]
-pub async fn reindex(session: Session, db_pool: web::Data<Pool>) -> impl Responder {
-    let user = match session.get("user") {
-        Err(e) => return error_unauthenticated(e),
-        Ok(value) => value,
-    };
-    if user.is_none() {
-        return error_unauthenticated("No user saved in session");
-    }
-
-    let user: UserData = user.unwrap();
-
-    let client: Client = match db_pool.get().await {
-        Ok(cli) => cli,
-        Err(e) => return error(e),
+pub async fn reindex(
+    session: Session,
+    db_pool: web::Data<Pool>,
+) -> Result<impl Responder, AppError> {
+    let Some(user) = session.get::<UserData>("user").map_err(error)? else {
+        return Err(error_unauthenticated("No user saved in session"));
     };
 
-    match reindex_user_files(&client, &user.username).await {
-        Ok(_) => HttpResponse::Ok().json("reindexed"),
-        Err(e) => error(e),
-    }
+    let client: Client = db_pool.get().await.map_err(error)?;
+
+    reindex_user_files(&client, &user.username)
+        .await
+        .map_err(error)?;
+    Ok(HttpResponse::Ok().json("reindexed"))
 }
