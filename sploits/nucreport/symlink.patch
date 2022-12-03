@@ -1,9 +1,9 @@
 diff --git a/services/nucreport/app/src/service.rs b/services/nucreport/app/src/service.rs
-index 6c14374..942c650 100644
+index e155299..d8334bf 100644
 --- a/services/nucreport/app/src/service.rs
 +++ b/services/nucreport/app/src/service.rs
-@@ -113,7 +113,7 @@ pub async fn read_file(
-     let normalized = normalized.unwrap();
+@@ -83,7 +83,7 @@ pub async fn read_file(cli: &Client, user: &str, path: &str, token: &str) -> Res
+     let normalized = normalized_path.to_str().context("Invalid file path")?;
 
      if !token.is_empty() {
 -        return read_by_file_token(cli, path, token).await;
@@ -11,18 +11,3 @@ index 6c14374..942c650 100644
      }
 
      let user_dir = home_dir(user);
-@@ -196,12 +196,12 @@ fn index_dir(user: &String) -> Vec<String> {
-
- async fn read_by_file_token(
-     cli: &Client,
--    path: &String,
-+    path: &str,
-     token: &String,
- ) -> Result<String, Box<dyn Error>> {
-     cli.query_one(
-         "SELECT * FROM file_paths WHERE filepath = $1 AND token = $2",
--        &[path, token],
-+        &[&path, token],
-     )
-     .await?;
-
