@@ -30,8 +30,8 @@ func NewSequentialRoundTripper(rt http.RoundTripper, sleep time.Duration) *Seque
 func (srt *SequentialRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	srt.mu.Lock()
 	defer func() {
-		srt.mu.Unlock()
 		time.Sleep(srt.sleep)
+		srt.mu.Unlock()
 	}()
 
 	return srt.rt.RoundTrip(req)
