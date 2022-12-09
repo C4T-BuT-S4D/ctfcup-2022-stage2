@@ -48,5 +48,40 @@ tasks:
     puts: 2
     default_score: 3500
 
-# TODO
-# teams:
+teams:
+  - ip: 10.80.0.2
+    name: NPC
+    highlighted: false
+  - ip: 10.80.1.2
+    name: Seed_Im_Pierre_Dim
+    highlighted: false
+  - ip: 10.80.2.2
+    name: Mik
+    highlighted: false
+  - ip: 10.80.3.2
+    name: SPRUSH
+    highlighted: false
+  - ip: 10.80.4.2
+    name: UzUzuga
+    highlighted: false
+  - ip: 10.80.5.2
+    name: smiley-from-telega
+    highlighted: false
+  - ip: 10.80.6.2
+    name: dtl
+    highlighted: false
+  - ip: 10.80.7.2
+    name: scimus_verum
+    highlighted: false
+  - ip: 10.80.8.2
+    name: FaKappa
+    highlighted: false
+  - ip: 10.80.9.2
+    name: 'Команда Артема Михеева 2'
+    highlighted: false
+  - ip: 10.80.10.2
+    name: .einabe
+    highlighted: false
+  - ip: 10.80.11.2
+    name: Ar
+    highlighted: false
